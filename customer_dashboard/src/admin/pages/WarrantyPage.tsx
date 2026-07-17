@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Wrench, RefreshCw, Search,
-  ChevronDown, Eye, Package
+  ChevronDown, Eye, Package, SlidersHorizontal, X
 } from 'lucide-react';
 import { warrantyService } from '../../services/warranty';
 import type { WarrantyRegistration, WarrantyClaim, AdminWarrantyStats } from '../../services/warranty';
@@ -44,6 +44,7 @@ const WarrantyPage: React.FC = () => {
   const [searchProduct, setSearchProduct] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   // Pagination State
   const [page, setPage] = useState(1);
@@ -182,21 +183,23 @@ const WarrantyPage: React.FC = () => {
     }
   };
 
+  const hasFilters = filterRole || searchProduct || startDate || endDate;
+
   return (
     <div className="space-y-6 text-left font-sans select-none">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <SectionHeader
-          title="FAAZO Warranty Operations"
-          subtitle="Verify manual customer registration submissions and resolve equipment trouble tickets."
-        />
-        <button
-          onClick={() => { fetchStats(); fetchData(); toast.success('Sync complete.'); }}
-          className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all cursor-pointer bg-white self-start md:self-auto"
-        >
-          <RefreshCw className="w-3.5 h-3.5" /> Refresh Dashboard
-        </button>
-      </div>
+      <SectionHeader
+        title="Warranty Operations"
+        subtitle="Verify manual customer registration submissions and resolve equipment trouble tickets."
+        actions={
+          <button
+            onClick={() => { fetchStats(); fetchData(); toast.success('Sync complete.'); }}
+            className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all cursor-pointer bg-white"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> Refresh Dashboard
+          </button>
+        }
+      />
 
       {/* Analytics Summary */}
       {statsLoading ? (
@@ -252,7 +255,7 @@ const WarrantyPage: React.FC = () => {
       <div className="flex border-b border-slate-100 mt-6">
         <button
           onClick={() => setActiveTab('registrations')}
-          className={`px-4 py-3.5 text-[11px] font-black uppercase tracking-wider border-b-2 cursor-pointer transition-colors ${
+          className={`px-5 py-3.5 text-xs font-black uppercase tracking-widest border-b-2 cursor-pointer transition-all ${
             activeTab === 'registrations'
               ? 'border-[#005B63] text-[#005B63]'
               : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -262,7 +265,7 @@ const WarrantyPage: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('claims')}
-          className={`px-4 py-3.5 text-[11px] font-black uppercase tracking-wider border-b-2 cursor-pointer transition-colors ${
+          className={`px-5 py-3.5 text-xs font-black uppercase tracking-widest border-b-2 cursor-pointer transition-all ${
             activeTab === 'claims'
               ? 'border-[#005B63] text-[#005B63]'
               : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -272,145 +275,146 @@ const WarrantyPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Sub-Filters / Status Navigation */}
-      <div className="flex flex-wrap gap-2 py-2">
-        {activeTab === 'registrations' ? (
-          <>
-            <button
-              onClick={() => setRegSubFilter('pending_verification')}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all ${
-                regSubFilter === 'pending_verification'
-                  ? 'bg-[#005B63] text-white'
-                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-              }`}
-            >
-              Pending Verification ({stats?.regs_pending_verification || 0})
-            </button>
-            <button
-              onClick={() => setRegSubFilter('active')}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all ${
-                regSubFilter === 'active'
-                  ? 'bg-[#005B63] text-white'
-                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-              }`}
-            >
-              Approved ({stats?.regs_approved || 0})
-            </button>
-            <button
-              onClick={() => setRegSubFilter('rejected')}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all ${
-                regSubFilter === 'rejected'
-                  ? 'bg-[#005B63] text-white'
-                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-              }`}
-            >
-              Rejected ({stats?.regs_rejected || 0})
-            </button>
-          </>
-        ) : (
-          <>
-            {[
-              { id: 'submitted', label: 'Submitted', count: stats?.claims_submitted },
-              { id: 'under_review', label: 'Under Review', count: stats?.claims_under_review },
-              { id: 'approved', label: 'Approved', count: stats?.claims_approved },
-              { id: 'assigned', label: 'Assigned', count: stats?.claims_assigned },
-              { id: 'repair_in_progress', label: 'Repair In Progress', count: stats?.claims_repair_in_progress },
-              { id: 'completed', label: 'Completed', count: stats?.claims_completed },
-              { id: 'closed', label: 'Closed', count: stats?.claims_closed }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setClaimSubFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all ${
-                  claimSubFilter === tab.id
-                    ? 'bg-[#005B63] text-white'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                }`}
-              >
-                {tab.label} ({tab.count || 0})
+      {/* Primary Search & Quick Filters Pill Container */}
+      <div className="bg-white border border-slate-100 rounded-2xl shadow-xs p-4 flex flex-col gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Primary Search */}
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              value={searchCustomer}
+              onChange={e => setSearchCustomer(e.target.value)}
+              placeholder="Search by customer name, email..."
+              className="w-full pl-9 pr-4 py-2 text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63] focus:ring-2 focus:ring-[#005B63]/10 transition-all placeholder:text-slate-400"
+            />
+            {searchCustomer && (
+              <button onClick={() => setSearchCustomer('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <X className="w-3.5 h-3.5" />
               </button>
-            ))}
-          </>
-        )}
-      </div>
-
-      {/* Main Filter Toolbar */}
-      <div className="bg-white border border-slate-100 p-5 rounded-2xl shadow-xs space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs font-semibold text-slate-700">
-          <div>
-            <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Search Customer</label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Doctor name or email..."
-                value={searchCustomer}
-                onChange={e => setSearchCustomer(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63] bg-white text-xs"
-              />
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            </div>
+            )}
           </div>
 
-          <div>
-            <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">User Role</label>
-            <div className="relative">
-              <select
-                value={filterRole}
-                onChange={e => setFilterRole(e.target.value)}
-                className="w-full appearance-none pl-3 pr-8 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-[#005B63] text-xs"
-              >
-                <option value="">All Account Roles</option>
-                <option value="customer">Customer (Practitioner)</option>
-                <option value="dealer">Authorized Dealer</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+          {/* Sub-status quick filter pills */}
+          <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-0.5">
+            {activeTab === 'registrations' ? (
+              <>
+                <button
+                  onClick={() => setRegSubFilter('pending_verification')}
+                  className={`px-3 py-1.5 text-[10px] font-bold rounded-lg capitalize transition-all ${
+                    regSubFilter === 'pending_verification' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Pending ({stats?.regs_pending_verification || 0})
+                </button>
+                <button
+                  onClick={() => setRegSubFilter('active')}
+                  className={`px-3 py-1.5 text-[10px] font-bold rounded-lg capitalize transition-all ${
+                    regSubFilter === 'active' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Approved ({stats?.regs_approved || 0})
+                </button>
+                <button
+                  onClick={() => setRegSubFilter('rejected')}
+                  className={`px-3 py-1.5 text-[10px] font-bold rounded-lg capitalize transition-all ${
+                    regSubFilter === 'rejected' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Rejected ({stats?.regs_rejected || 0})
+                </button>
+              </>
+            ) : (
+              <>
+                {[
+                  { id: 'submitted', label: 'Submitted' },
+                  { id: 'under_review', label: 'Under Review' },
+                  { id: 'approved', label: 'Approved' },
+                  { id: 'assigned', label: 'Assigned' },
+                  { id: 'repair_in_progress', label: 'In Repair' },
+                  { id: 'completed', label: 'Completed' },
+                  { id: 'closed', label: 'Closed' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setClaimSubFilter(tab.id)}
+                    className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg capitalize transition-all ${
+                      claimSubFilter === tab.id ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </>
+            )}
           </div>
 
-          <div>
-            <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Product Name</label>
-            <div className="relative">
+          {/* Sliders toggle for advanced filters */}
+          <button
+            onClick={() => setShowFilters(v => !v)}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border transition-all cursor-pointer bg-white ${
+              showFilters ? 'bg-[#005B63] text-white border-[#005B63]' : 'text-slate-600 border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            Filters {hasFilters && <span className="w-1.5 h-1.5 bg-rose-500 rounded-full" />}
+          </button>
+
+          {hasFilters && (
+            <button onClick={handleResetFilters} className="text-xs text-rose-600 font-semibold hover:underline flex items-center gap-1">
+              <X className="w-3.5 h-3.5" /> Clear
+            </button>
+          )}
+        </div>
+
+        {/* Expandable Advanced Filters Tray */}
+        {showFilters && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-slate-100 animate-fade-in">
+            <div>
+              <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">User Account Role</label>
+              <div className="relative">
+                <select
+                  value={filterRole}
+                  onChange={e => setFilterRole(e.target.value)}
+                  className="w-full appearance-none pl-3 pr-8 py-1.5 text-xs border border-slate-200 bg-slate-50 rounded-xl focus:outline-none focus:border-[#005B63]"
+                >
+                  <option value="">All Account Roles</option>
+                  <option value="customer">Customer (Practitioner)</option>
+                  <option value="dealer">Authorized Dealer</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Product Allocation</label>
               <input
                 type="text"
-                placeholder="Search equipment..."
                 value={searchProduct}
                 onChange={e => setSearchProduct(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63] bg-white text-xs"
+                placeholder="Search by equipment name..."
+                className="w-full px-3 py-1.5 text-xs border border-slate-200 bg-slate-50 rounded-xl focus:outline-none focus:border-[#005B63]"
               />
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">From Date</label>
+              <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Purchase From Date</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="w-full px-3 py-1.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63] bg-white text-xs"
+                className="w-full px-3 py-1 text-xs border border-slate-200 bg-slate-50 rounded-xl focus:outline-none focus:border-[#005B63]"
               />
             </div>
+
             <div>
-              <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">To Date</label>
+              <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Purchase To Date</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="w-full px-3 py-1.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63] bg-white text-xs"
+                className="w-full px-3 py-1 text-xs border border-slate-200 bg-slate-50 rounded-xl focus:outline-none focus:border-[#005B63]"
               />
             </div>
-          </div>
-        </div>
-
-        {(searchCustomer || filterRole || searchProduct || startDate || endDate) && (
-          <div className="flex justify-end pt-1">
-            <button
-              onClick={handleResetFilters}
-              className="text-[10px] font-bold text-rose-600 hover:text-rose-800 transition-colors uppercase tracking-widest cursor-pointer"
-            >
-              Clear Filters
-            </button>
           </div>
         )}
       </div>
