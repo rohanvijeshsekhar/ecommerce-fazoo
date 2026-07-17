@@ -1,0 +1,35 @@
+# ============================================================
+# FAAZO Backend – Flake8 Configuration
+# ============================================================
+
+[flake8]
+max-line-length = 100
+max-complexity = 10
+
+exclude =
+    .git,
+    __pycache__,
+    migrations,
+    venv,
+    .venv,
+    build,
+    dist,
+    staticfiles,
+    media,
+    logs,
+    *.egg-info
+
+# Ignore rules that conflict with Black
+extend-ignore =
+    # E203: Whitespace before ':' (conflicts with Black)
+    E203,
+    # W503: Line break before binary operator (conflicts with Black)
+    W503,
+    # E501: Line too long (handled by Black)
+    E501,
+
+per-file-ignores =
+    # Allow unused imports in __init__.py files
+    */__init__.py: F401
+    # Allow star imports in settings files
+    */settings/*.py: F401,F403,F405

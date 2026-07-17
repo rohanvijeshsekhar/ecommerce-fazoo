@@ -1,0 +1,40 @@
+# ============================================================
+# FAAZO Backend – Pre-commit Hooks
+# Run: pre-commit install (once, after cloning)
+# Then hooks run automatically on every git commit.
+# ============================================================
+
+repos:
+  # ── Black – Code Formatting ────────────────────────────
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3.12
+        args: ["--config", "pyproject.toml"]
+
+  # ── isort – Import Sorting ─────────────────────────────
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--settings-path", "pyproject.toml"]
+
+  # ── Flake8 – Linting ───────────────────────────────────
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+
+  # ── Trailing Whitespace & EOF ──────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: debug-statements

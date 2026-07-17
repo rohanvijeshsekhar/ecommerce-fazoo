@@ -1,0 +1,19 @@
+🎉 Dealer Account Approved – FAAZO
+
+Congratulations, {{ user.get_short_name }}!
+
+Your dealer application for {{ company_name }} has been APPROVED.
+Welcome to the FAAZO Dealer Network!
+
+What's now active on your account:
+✓ Exclusive dealer pricing on all FAAZO products
+✓ Higher order quantity limits
+✓ Priority order processing
+✓ Dedicated dealer support channel
+
+Sign in to access your dealer account: {{ frontend_url }}/login
+
+Need help? Contact dealer support at {{ support_email }}.
+
+---
+© {{ current_year }} FAAZO Dental Solutions · {{ support_email }}

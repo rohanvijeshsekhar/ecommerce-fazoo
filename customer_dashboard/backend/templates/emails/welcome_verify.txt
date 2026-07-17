@@ -1,0 +1,14 @@
+Welcome to FAAZO, {{ user.get_short_name }}!
+
+Thank you for creating your FAAZO account. Please verify your email address to activate your account.
+
+VERIFY YOUR EMAIL:
+{{ verify_url }}
+
+This link expires in {{ expires_hours }} hours.
+
+If you didn't create a FAAZO account, you can safely ignore this email.
+
+---
+© {{ current_year }} FAAZO Dental Solutions. All rights reserved.
+Support: {{ support_email }}

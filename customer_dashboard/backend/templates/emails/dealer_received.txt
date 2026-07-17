@@ -1,0 +1,20 @@
+Dealer Application Received – FAAZO
+
+Hi {{ user.get_short_name }},
+
+Thank you for applying to become a FAAZO authorised dealer.
+
+Application for: {{ company_name }}
+Status: Pending Review
+Review Timeline: 2–3 business days
+
+What happens next:
+1. Our team reviews your submitted business documents.
+2. We verify your dealer eligibility and credentials.
+3. You receive an email with the decision within 2–3 business days.
+4. Upon approval, dealer pricing automatically activates on your account.
+
+Questions? Contact our dealer support at {{ support_email }}.
+
+---
+© {{ current_year }} FAAZO Dental Solutions · {{ support_email }}

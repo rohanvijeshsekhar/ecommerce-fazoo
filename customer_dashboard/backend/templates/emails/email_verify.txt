@@ -1,0 +1,15 @@
+Verify Your Email – FAAZO
+
+Hi {{ user.get_short_name }},
+
+You requested a new verification link. Use the link below to verify your email address.
+
+VERIFY EMAIL:
+{{ verify_url }}
+
+This link expires in {{ expires_hours }} hours.
+
+If you didn't request this, ignore this email.
+
+---
+© {{ current_year }} FAAZO Dental Solutions · {{ support_email }}

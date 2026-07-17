@@ -1,0 +1,390 @@
+[
+{
+    "model": "combos.combodeal",
+    "pk": "1769ad71-c2f7-497d-8459-6778ad0bc133",
+    "fields": {
+        "created_at": "2026-07-06T06:55:35.805Z",
+        "updated_at": "2026-07-06T06:55:35.805Z",
+        "is_deleted": false,
+        "deleted_at": null,
+        "deleted_by": null,
+        "created_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "updated_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "title": "nzsjgxhhj",
+        "slug": "nzsjgxhhj",
+        "short_description": "xbnxnb",
+        "full_description": "",
+        "thumbnail": "",
+        "banner": "",
+        "original_price": "32000.00",
+        "combo_price": "5999.75",
+        "dealer_price": null,
+        "offer_price": null,
+        "offer_start_date": null,
+        "offer_end_date": null,
+        "is_featured": false,
+        "status": "active",
+        "inventory": 0,
+        "meta_title": "",
+        "meta_description": "",
+        "meta_keywords": ""
+    }
+},
+{
+    "model": "combos.combodeal",
+    "pk": "2ecaae03-4135-4145-b19b-c98c5596a204",
+    "fields": {
+        "created_at": "2026-07-06T07:06:27.835Z",
+        "updated_at": "2026-07-06T07:06:27.835Z",
+        "is_deleted": false,
+        "deleted_at": null,
+        "deleted_by": null,
+        "created_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "updated_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "title": "dddddddddddddd",
+        "slug": "dddddddddddddd",
+        "short_description": "dddddddddddddddddd",
+        "full_description": "",
+        "thumbnail": "",
+        "banner": "",
+        "original_price": "25000.00",
+        "combo_price": "90000.00",
+        "dealer_price": null,
+        "offer_price": null,
+        "offer_start_date": null,
+        "offer_end_date": null,
+        "is_featured": false,
+        "status": "active",
+        "inventory": 0,
+        "meta_title": "",
+        "meta_description": "",
+        "meta_keywords": ""
+    }
+},
+{
+    "model": "combos.combodeal",
+    "pk": "31fdb513-1e53-4643-b496-85fbe9505a80",
+    "fields": {
+        "created_at": "2026-07-06T07:59:59.434Z",
+        "updated_at": "2026-07-06T09:33:56.652Z",
+        "is_deleted": false,
+        "deleted_at": null,
+        "deleted_by": null,
+        "created_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "updated_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "title": "cccccccccccccccccccc",
+        "slug": "cccccccccccccccccccc-1",
+        "short_description": "ccccccccccccccccc",
+        "full_description": "",
+        "thumbnail": "combos/thumbnails/thumb_Pccojl6.jpg",
+        "banner": "combos/banners/banner_JhUOq2F.jpg",
+        "original_price": "25000.00",
+        "combo_price": "90000.00",
+        "dealer_price": null,
+        "offer_price": null,
+        "offer_start_date": null,
+        "offer_end_date": null,
+        "is_featured": false,
+        "status": "active",
+        "inventory": 7,
+        "meta_title": "",
+        "meta_description": "",
+        "meta_keywords": ""
+    }
+},
+{
+    "model": "combos.combodeal",
+    "pk": "3c827755-87c8-41d2-b1eb-ba543fc5c64c",
+    "fields": {
+        "created_at": "2026-07-06T06:55:43.367Z",
+        "updated_at": "2026-07-06T06:55:43.367Z",
+        "is_deleted": false,
+        "deleted_at": null,
+        "deleted_by": null,
+        "created_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "updated_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "title": "nzsjgxhhj",
+        "slug": "nzsjgxhhj-1",
+        "short_description": "xbnxnb",
+        "full_description": "",
+        "thumbnail": "",
+        "banner": "",
+        "original_price": "32000.00",
+        "combo_price": "5999.75",
+        "dealer_price": null,
+        "offer_price": null,
+        "offer_start_date": null,
+        "offer_end_date": null,
+        "is_featured": false,
+        "status": "active",
+        "inventory": 0,
+        "meta_title": "",
+        "meta_description": "",
+        "meta_keywords": ""
+    }
+},
+{
+    "model": "combos.combodeal",
+    "pk": "58d75391-4a46-42fd-95c6-8371f682e7ce",
+    "fields": {
+        "created_at": "2026-07-06T07:08:07.436Z",
+        "updated_at": "2026-07-06T07:08:07.436Z",
+        "is_deleted": false,
+        "deleted_at": null,
+        "deleted_by": null,
+        "created_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "updated_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "title": "xxxxxxxxxxxxxxxxxx",
+        "slug": "xxxxxxxxxxxxxxxxxx",
+        "short_description": "xxxxxxxxxxxxxxxxxxxxx",
+        "full_description": "",
+        "thumbnail": "",
+        "banner": "",
+        "original_price": "25000.00",
+        "combo_price": "6999.90",
+        "dealer_price": null,
+        "offer_price": null,
+        "offer_start_date": null,
+        "offer_end_date": null,
+        "is_featured": false,
+        "status": "active",
+        "inventory": 0,
+        "meta_title": "",
+        "meta_description": "",
+        "meta_keywords": ""
+    }
+},
+{
+    "model": "combos.combodeal",
+    "pk": "a61fdd8a-5317-4160-85e9-206716fad15b",
+    "fields": {
+        "created_at": "2026-07-06T09:40:38.296Z",
+        "updated_at": "2026-07-06T09:40:39.750Z",
+        "is_deleted": false,
+        "deleted_at": null,
+        "deleted_by": null,
+        "created_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "updated_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "title": "go there",
+        "slug": "go-there",
+        "short_description": "",
+        "full_description": "",
+        "thumbnail": "combos/thumbnails/Screenshot_2026-02-14_125312.png",
+        "banner": "combos/banners/Screenshot_2026-05-12_155320.png",
+        "original_price": "25000.00",
+        "combo_price": "7000.00",
+        "dealer_price": null,
+        "offer_price": null,
+        "offer_start_date": null,
+        "offer_end_date": null,
+        "is_featured": false,
+        "status": "draft",
+        "inventory": 0,
+        "meta_title": "",
+        "meta_description": "",
+        "meta_keywords": ""
+    }
+},
+{
+    "model": "combos.combodeal",
+    "pk": "a6dd653e-df3a-48e3-9398-5c492a07eaea",
+    "fields": {
+        "created_at": "2026-07-06T07:59:49.052Z",
+        "updated_at": "2026-07-06T07:59:49.052Z",
+        "is_deleted": false,
+        "deleted_at": null,
+        "deleted_by": null,
+        "created_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "updated_by": "93be03f2-a995-4046-a0f8-83470f57c046",
+        "title": "cccccccccccccccccccc",
+        "slug": "cccccccccccccccccccc",
+        "short_description": "ccccccccccccccccc",
+        "full_description": "",
+        "thumbnail": "",
+        "banner": "",
+        "original_price": "25000.00",
+        "combo_price": "90000.00",
+        "dealer_price": null,
+        "offer_price": null,
+        "offer_start_date": null,
+        "offer_end_date": null,
+        "is_featured": false,
+        "status": "active",
+        "inventory": 7,
+        "meta_title": "",
+        "meta_description": "",
+        "meta_keywords": ""
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 1,
+    "fields": {
+        "combo_deal": "1769ad71-c2f7-497d-8459-6778ad0bc133",
+        "product": "9e476b82-71ca-4ad3-b58b-1514ff81a551",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 2,
+    "fields": {
+        "combo_deal": "1769ad71-c2f7-497d-8459-6778ad0bc133",
+        "product": "6c60b716-d73d-4c13-9af0-c92dfa42bcbb",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 3,
+    "fields": {
+        "combo_deal": "1769ad71-c2f7-497d-8459-6778ad0bc133",
+        "product": "cc42db10-18a7-42d2-afcd-2ba63e05cad3",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 4,
+    "fields": {
+        "combo_deal": "3c827755-87c8-41d2-b1eb-ba543fc5c64c",
+        "product": "9e476b82-71ca-4ad3-b58b-1514ff81a551",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 5,
+    "fields": {
+        "combo_deal": "3c827755-87c8-41d2-b1eb-ba543fc5c64c",
+        "product": "6c60b716-d73d-4c13-9af0-c92dfa42bcbb",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 6,
+    "fields": {
+        "combo_deal": "3c827755-87c8-41d2-b1eb-ba543fc5c64c",
+        "product": "cc42db10-18a7-42d2-afcd-2ba63e05cad3",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 7,
+    "fields": {
+        "combo_deal": "2ecaae03-4135-4145-b19b-c98c5596a204",
+        "product": "9e476b82-71ca-4ad3-b58b-1514ff81a551",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 8,
+    "fields": {
+        "combo_deal": "2ecaae03-4135-4145-b19b-c98c5596a204",
+        "product": "6c60b716-d73d-4c13-9af0-c92dfa42bcbb",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 9,
+    "fields": {
+        "combo_deal": "58d75391-4a46-42fd-95c6-8371f682e7ce",
+        "product": "9e476b82-71ca-4ad3-b58b-1514ff81a551",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 10,
+    "fields": {
+        "combo_deal": "58d75391-4a46-42fd-95c6-8371f682e7ce",
+        "product": "6c60b716-d73d-4c13-9af0-c92dfa42bcbb",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 11,
+    "fields": {
+        "combo_deal": "a6dd653e-df3a-48e3-9398-5c492a07eaea",
+        "product": "9e476b82-71ca-4ad3-b58b-1514ff81a551",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 12,
+    "fields": {
+        "combo_deal": "a6dd653e-df3a-48e3-9398-5c492a07eaea",
+        "product": "6c60b716-d73d-4c13-9af0-c92dfa42bcbb",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 13,
+    "fields": {
+        "combo_deal": "31fdb513-1e53-4643-b496-85fbe9505a80",
+        "product": "9e476b82-71ca-4ad3-b58b-1514ff81a551",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 14,
+    "fields": {
+        "combo_deal": "31fdb513-1e53-4643-b496-85fbe9505a80",
+        "product": "6c60b716-d73d-4c13-9af0-c92dfa42bcbb",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 15,
+    "fields": {
+        "combo_deal": "c5c7c665-59b4-42b3-a72e-94a5055deeff",
+        "product": "9e476b82-71ca-4ad3-b58b-1514ff81a551",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 16,
+    "fields": {
+        "combo_deal": "c5c7c665-59b4-42b3-a72e-94a5055deeff",
+        "product": "6c60b716-d73d-4c13-9af0-c92dfa42bcbb",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 17,
+    "fields": {
+        "combo_deal": "c5c7c665-59b4-42b3-a72e-94a5055deeff",
+        "product": "cc42db10-18a7-42d2-afcd-2ba63e05cad3",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 18,
+    "fields": {
+        "combo_deal": "a61fdd8a-5317-4160-85e9-206716fad15b",
+        "product": "6c60b716-d73d-4c13-9af0-c92dfa42bcbb",
+        "quantity": 1
+    }
+},
+{
+    "model": "combos.combodealproduct",
+    "pk": 19,
+    "fields": {
+        "combo_deal": "a61fdd8a-5317-4160-85e9-206716fad15b",
+        "product": "9e476b82-71ca-4ad3-b58b-1514ff81a551",
+        "quantity": 1
+    }
+}
+]

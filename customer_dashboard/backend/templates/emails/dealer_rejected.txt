@@ -1,0 +1,19 @@
+Dealer Application Update – FAAZO
+
+Hi {{ user.get_short_name }},
+
+We have reviewed your dealer application for {{ company_name }} and unfortunately
+we are unable to approve it at this time.
+
+{% if rejection_reason %}REASON:
+{{ rejection_reason }}
+
+{% endif %}WHAT YOU CAN DO NEXT:
+You may re-apply after addressing the reason above. Ensure your business documents
+are up to date and clearly legible before resubmitting.
+
+You can still use FAAZO as a regular customer account. If you have questions,
+please contact us at {{ support_email }}.
+
+---
+© {{ current_year }} FAAZO Dental Solutions · {{ support_email }}

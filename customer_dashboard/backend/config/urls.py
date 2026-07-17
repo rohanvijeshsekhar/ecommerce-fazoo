@@ -1,0 +1,105 @@
+"""
+FAAZO Backend – Root URL Configuration
+
+API namespace: /api/v1/
+Documentation: /api/schema/ · /api/docs/ · /api/redoc/
+Admin:         /admin/
+"""
+
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
+
+from django.conf import settings
+from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import include, path
+
+# ============================================================
+# Django Admin Branding
+# ============================================================
+admin.site.site_header = "FAAZO Dental Solutions – Admin"
+admin.site.site_title = "FAAZO Admin"
+admin.site.index_title = "FAAZO Management Portal"
+
+# ============================================================
+# URL Patterns
+# ============================================================
+urlpatterns = [
+    # ── Django Admin ────────────────────────────────────────
+    path("admin/", admin.site.urls),
+    # ── OpenAPI / Swagger Documentation ─────────────────────
+    # Schema (raw OpenAPI JSON)
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    # Swagger UI (interactive)
+    path(
+        "api/docs/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="swagger-ui",
+    ),
+    # ReDoc UI (alternative read-only view)
+    path(
+        "api/redoc/",
+        SpectacularRedocView.as_view(url_name="schema"),
+        name="redoc",
+    ),
+    # ── API v1 ──────────────────────────────────────────────
+    path(
+        "api/v1/",
+        include(
+            [
+                # Phase 1/2 – Health check
+                path("", include("apps.common.urls")),
+                # Phase 3 – Authentication
+                path("auth/", include("apps.authentication.urls")),
+                # Phase 3 – Users (Profile + Addresses)
+                path("users/", include("apps.users.urls")),
+                # Phase 3 – Dealer
+                path("dealer/", include("apps.dealer.urls")),
+                # Phase 6A – Pricing & Inventory (Include before products to avoid slug collisions)
+                path("",            include("apps.pricing.urls")),
+                path("",            include("apps.inventory.urls")),
+                # Phase 5B – Catalogue (Brands / Categories / Products)
+                path("",            include("apps.brands.urls")),
+                path("",            include("apps.categories.urls")),
+                path("",            include("apps.products.urls")),
+                # Phase 5B – Homepage CMS
+                path("",            include("apps.homepage.urls")),
+                path("combos/",     include("apps.combos.urls")),
+                # Phase 8+ – Cart
+                path("cart/", include("apps.cart.urls")),
+                # Phase 9+ – Checkout
+                path("checkout/", include("apps.checkout.urls")),
+                # Phase 10+ – Orders
+                path("orders/", include("apps.orders.urls")),
+                # Phase 11 – Payments
+                path("payments/", include("apps.payments.urls")),
+                # Phase 11+ – Warranty
+                path("warranty/", include("apps.warranty.urls")),
+                # Phase 12+ – Support
+                # path("support/", include("apps.support.urls")),
+                # Phase 13+ – Notifications
+                # path("notifications/", include("apps.notifications.urls")),
+            ]
+        ),
+    ),
+]
+
+# ============================================================
+# Development – Serve media and static files locally
+# ============================================================
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+    # Django Debug Toolbar
+    try:
+        import debug_toolbar
+
+        urlpatterns = [
+            path("__debug__/", include(debug_toolbar.urls)),
+        ] + urlpatterns
+    except ImportError:
+        pass

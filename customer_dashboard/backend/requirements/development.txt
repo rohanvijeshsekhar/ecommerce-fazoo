@@ -1,0 +1,17 @@
+# ============================================================
+# FAAZO Backend – Development Requirements
+# ============================================================
+-r base.txt
+
+# Development Database (SQLite is built into Python – no extra package)
+
+# Debug Toolbar
+django-debug-toolbar>=4.3,<5.0
+
+# Code Quality
+black>=24.0
+isort>=5.13
+flake8>=7.0
+
+# Pre-commit hooks
+pre-commit>=3.7
