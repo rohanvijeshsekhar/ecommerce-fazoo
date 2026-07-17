@@ -150,35 +150,47 @@ const Navbar: React.FC<NavbarProps> = ({
     read: boolean;
   }
 
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      id: 'notif-1',
-      title: 'Order Status Update',
-      body: 'Your order FZ-2026-8945 has been processed and is ready for dispatch.',
-      time: 'Just now',
-      route: 'my-orders',
-      read: false
-    },
-    {
-      id: 'notif-2',
-      title: 'Warranty Registered',
-      body: 'NSK Pana-Max Handpiece serial code registered successfully.',
-      time: '2 hours ago',
-      route: 'my-orders',
-      read: false
-    },
-    {
-      id: 'notif-3',
-      title: 'Price Drop Alert',
-      body: 'Werther Silent Compressor price dropped. View spec updates.',
-      time: '1 day ago',
-      route: 'home',
-      read: true
-    }
-  ]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
-  const markAllAsRead = () => {
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchNotifications = async () => {
+        try {
+          const { notificationService } = await import('../services/support');
+          const res = await notificationService.getNotifications();
+          if (res.success && res.data) {
+            const mapped = res.data.map((n: any) => ({
+              id: n.id,
+              title: n.title,
+              body: n.message,
+              time: new Date(n.created_at).toLocaleDateString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+              route: 'home' as const,
+              read: n.is_read
+            }));
+            setNotifications(mapped);
+          }
+        } catch (e) {
+          console.error('[Navbar] Failed to load notifications:', e);
+        }
+      };
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    } else {
+      setNotifications([]);
+    }
+  }, [isAuthenticated]);
+
+  const markAllAsRead = async () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    if (isAuthenticated) {
+      try {
+        const { notificationService } = await import('../services/support');
+        await notificationService.markAllRead();
+      } catch (e) {
+        console.error('[Navbar] Failed to mark notifications read:', e);
+      }
+    }
   };
 
   const [dynamicSearchResults, setDynamicSearchResults] = useState<any[]>([]);

@@ -46,17 +46,6 @@ interface ProfileDashboardProps {
 }
 
 
-interface SupportTicket {
-  id: string;
-  subject: string;
-  orderId: string;
-  productName: string;
-  category: string;
-  description: string;
-  status: 'open' | 'in-progress' | 'resolved';
-  date: string;
-  messages: { sender: 'user' | 'agent'; text: string; date: string }[];
-}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -232,31 +221,58 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({
   // Support wizard state (Order-driven support)
   const [supportOrderId, setSupportOrderId] = useState<string>('');
   const [supportProductId, setSupportProductId] = useState<string>('');
-  const [supportCategory, setSupportCategory] = useState<string>('Order Issue');
+  const [supportCategory, setSupportCategory] = useState<string>('product_enquiry');
+  const [supportSubject, setSupportSubject] = useState<string>('');
+  const [supportPriority, setSupportPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
   const [supportDescription, setSupportDescription] = useState<string>('');
-  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([
-    {
-      id: 'TKT-8291A',
-      subject: 'Equipment Demonstration Request',
-      orderId: 'FA-90231',
-      productName: 'NSK FX205 Dental Handpiece',
-      category: 'Setup & Demo Request',
-      description: 'Requesting clinical demo at our dental facility.',
-      status: 'resolved',
-      date: '2026-06-15',
-      messages: [
-        { sender: 'user', text: 'Hi, I received my NSK handpiece yesterday and would like to request a clinical demonstration.', date: '2026-06-15 10:00' },
-        { sender: 'agent', text: 'Dear Doctor, our field clinical expert will contact you within 24 hours to schedule the demo.', date: '2026-06-15 11:30' }
-      ]
-    }
-  ]);
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [supportAttachment, setSupportAttachment] = useState<File | null>(null);
+  const [supportTickets, setSupportTickets] = useState<any[]>([]);
+  const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
   const [isCreatingTicket, setIsCreatingTicket] = useState(false);
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [submittingSupportTicket, setSubmittingSupportTicket] = useState(false);
+  const [supportReplyText, setSupportReplyText] = useState('');
+  const [supportReplyAttachment, setSupportReplyAttachment] = useState<File | null>(null);
+  const [submittingSupportReply, setSubmittingSupportReply] = useState(false);
 
   // Warranty assets state
   const [registrations, setRegistrations] = useState<WarrantyRegistration[]>([]);
   const [importedProducts, setImportedProducts] = useState<ImportedProduct[]>([]);
   const [claims, setClaims] = useState<WarrantyClaim[]>([]);
+  const fetchSupportTickets = useCallback(async () => {
+    setSupportLoading(true);
+    try {
+      const { supportService } = await import('../services/support');
+      const res = await supportService.getTickets();
+      if (res.success && res.data) {
+        setSupportTickets(res.data);
+      }
+    } catch (e) {
+      console.error('[ProfileDashboard] Failed to fetch support tickets:', e);
+    } finally {
+      setSupportLoading(false);
+    }
+  }, []);
+
+  const refreshSingleTicket = async (ticketId: string) => {
+    try {
+      const { supportService } = await import('../services/support');
+      const res = await supportService.getTicket(ticketId);
+      if (res.success && res.data) {
+        setSelectedTicket(res.data);
+        setSupportTickets(prev => prev.map(t => t.id === ticketId ? res.data : t));
+      }
+    } catch (e) {
+      console.error('[ProfileDashboard] Failed to refresh ticket:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === 'support') {
+      fetchSupportTickets();
+    }
+  }, [activeSection]);
+
   const [warrantiesLoading, setWarrantiesLoading] = useState(false);
   const [warrantySubTab, setWarrantySubTab] = useState<'active' | 'expired' | 'claims'>('active');
 
@@ -524,33 +540,53 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({
 
 
   // ── Support ticket submit ──
-  const handleSupportSubmit = () => {
-    if (!supportDescription) {
+  const handleSupportSubmit = async () => {
+    if (!supportSubject.trim()) {
+      fireToast('Please enter a subject.');
+      return;
+    }
+    if (!supportDescription.trim()) {
       fireToast('Please enter a description.');
       return;
     }
 
-    const order = orders.find(o => o.id === supportOrderId);
-    const product = order?.items.find(p => p.id === supportProductId);
+    setSubmittingSupportTicket(true);
+    try {
+      const { supportService } = await import('../services/support');
+      const formData = new FormData();
+      formData.append('subject', supportSubject.trim());
+      formData.append('category', supportCategory);
+      formData.append('priority', supportPriority);
+      formData.append('description', supportDescription.trim());
+      if (supportOrderId) {
+        formData.append('related_order', supportOrderId);
+      }
+      if (supportProductId) {
+        formData.append('related_product', supportProductId);
+      }
+      if (supportAttachment) {
+        formData.append('attachment', supportAttachment);
+      }
 
-    const newTicket: SupportTicket = {
-      id: `TKT-${Math.floor(Math.random() * 9000) + 1000}A`,
-      subject: `${supportCategory} - ${product?.name || 'General Inquiry'}`,
-      orderId: supportOrderId || 'N/A',
-      productName: product?.name || 'N/A',
-      category: supportCategory,
-      description: supportDescription,
-      status: 'open',
-      date: new Date().toISOString().split('T')[0],
-      messages: [
-        { sender: 'user', text: supportDescription, date: new Date().toLocaleString() }
-      ]
-    };
-
-    setSupportTickets(prev => [newTicket, ...prev]);
-    setIsCreatingTicket(false);
-    setSupportDescription('');
-    fireToast('Support ticket submitted successfully!');
+      const res = await supportService.createTicket(formData);
+      if (res.success && res.data) {
+        setSupportTickets(prev => [res.data, ...prev]);
+        setIsCreatingTicket(false);
+        setSupportSubject('');
+        setSupportDescription('');
+        setSupportOrderId('');
+        setSupportProductId('');
+        setSupportAttachment(null);
+        fireToast('Support ticket raised successfully!');
+      } else {
+        fireToast(res.message || 'Failed to submit ticket.');
+      }
+    } catch (e: any) {
+      console.error(e);
+      fireToast(e.response?.data?.error?.message || 'Failed to submit ticket.');
+    } finally {
+      setSubmittingSupportTicket(false);
+    }
   };
 
   const getStatusLabel = (status: string) => {
@@ -2104,150 +2140,427 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({
   };
 
   // Support (Transactional Flow wizard)
+  // Support (Transactional Flow wizard)
   const renderSupport = () => {
     const selectedOrderData = orders.find(o => o.id === supportOrderId);
+
+    const categoryLabels: Record<string, string> = {
+      product_enquiry: 'Product Enquiry',
+      technical_assistance: 'Technical Assistance',
+      installation_help: 'Installation Help',
+      order_issue: 'Order Issue',
+      delivery_issue: 'Delivery Issue',
+      billing_issue: 'Billing Issue',
+      dealer_support: 'Dealer Support',
+      general_complaint: 'General Complaint',
+      general_feedback: 'General Feedback',
+      other: 'Other Support Requests',
+    };
+
+    const ticketStatusLabels: Record<string, { label: string; color: string }> = {
+      open: { label: 'Open', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+      in_progress: { label: 'In Progress', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+      waiting_customer: { label: 'Waiting for Customer', color: 'text-indigo-700 bg-indigo-50 border-indigo-200' },
+      resolved: { label: 'Resolved', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+      closed: { label: 'Closed', color: 'text-slate-700 bg-slate-50 border-slate-200' },
+    };
+
+    const ticketPriorityLabels: Record<string, { label: string; color: string }> = {
+      low: { label: 'Low', color: 'bg-slate-100 text-slate-600 border border-slate-200' },
+      medium: { label: 'Medium', color: 'bg-blue-50 text-blue-700 border border-blue-100' },
+      high: { label: 'High', color: 'bg-orange-50 text-orange-700 border border-orange-100' },
+      critical: { label: 'Critical', color: 'bg-rose-50 text-rose-700 border border-rose-100 font-bold' },
+    };
+
+    const handleReplySubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!selectedTicket) return;
+      if (!supportReplyText.trim() && !supportReplyAttachment) {
+        fireToast('Please write a reply or attach a file.');
+        return;
+      }
+      setSubmittingSupportReply(true);
+      try {
+        const { supportService } = await import('../services/support');
+        const formData = new FormData();
+        if (supportReplyText.trim()) {
+          formData.append('message', supportReplyText.trim());
+        }
+        if (supportReplyAttachment) {
+          formData.append('attachment', supportReplyAttachment);
+        }
+        const res = await supportService.replyTicket(selectedTicket.id, formData);
+        if (res.success && res.data) {
+          setSupportReplyText('');
+          setSupportReplyAttachment(null);
+          fireToast('Reply sent!');
+          await refreshSingleTicket(selectedTicket.id);
+        } else {
+          fireToast(res.message || 'Failed to send reply.');
+        }
+      } catch (e: any) {
+        console.error(e);
+        fireToast(e.response?.data?.error?.message || 'Failed to send reply.');
+      } finally {
+        setSubmittingSupportReply(false);
+      }
+    };
 
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <SectionHeader title="Support Tickets" subtitle="Report issues linked to specific orders, items, or deliveries." />
-          {!isCreatingTicket && (
-            <button
-              onClick={() => { setSupportOrderId(''); setSupportProductId(''); setIsCreatingTicket(true); }}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-[#004b52]"
-              style={{ background: TEAL }}
-            >
-              <Plus className="w-3.5 h-3.5" /> File Ticket
-            </button>
-          )}
+          <SectionHeader title="Support Helpdesk" subtitle="Raise support requests or communicate with our helpdesk team." />
         </div>
+
+        {/* Tabs header */}
+        {!selectedTicket && (
+          <div className="flex border-b border-slate-100 mb-6">
+            <button
+              onClick={() => { setIsCreatingTicket(false); }}
+              className={`pb-3 px-6 text-xs font-black uppercase tracking-widest border-b-2 transition-all cursor-pointer ${
+                !isCreatingTicket
+                  ? 'border-[#005B63] text-[#005B63]'
+                  : 'border-transparent text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              My Support Tickets
+            </button>
+            <button
+              onClick={() => { setIsCreatingTicket(true); }}
+              className={`pb-3 px-6 text-xs font-black uppercase tracking-widest border-b-2 transition-all cursor-pointer ${
+                isCreatingTicket
+                  ? 'border-[#005B63] text-[#005B63]'
+                  : 'border-transparent text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              Create Ticket
+            </button>
+          </div>
+        )}
 
         {/* Wizard Form */}
         {isCreatingTicket ? (
-          <div className="bg-white rounded-2xl border border-[#005B63]/30 shadow-md p-6 space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Raise Procurement Support Ticket</h3>
-              <button onClick={() => setIsCreatingTicket(false)} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
+              <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Raise Support Request</h3>
+              <button onClick={() => setIsCreatingTicket(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-4">
-              {/* Step 1: Select Order */}
+              {/* Subject */}
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">1. Select Reference Order</label>
-                <div className="relative">
-                  <select
-                    value={supportOrderId}
-                    onChange={e => { setSupportOrderId(e.target.value); setSupportProductId(''); }}
-                    className="w-full appearance-none px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-[#005B63]"
-                  >
-                    <option value="">— General / Account Inquiry —</option>
-                    {orders.map(o => (
-                      <option key={o.id} value={o.id}>Order #{o.id} ({o.date}) — ₹{o.total.toLocaleString()}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">Subject</label>
+                <input
+                  type="text"
+                  placeholder="Summarize your issue..."
+                  value={supportSubject}
+                  onChange={e => setSupportSubject(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-[#005B63]"
+                />
               </div>
 
-              {/* Step 2: Select Product (only if order selected) */}
-              {supportOrderId && selectedOrderData && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Category */}
                 <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">2. Select Reference Product</label>
+                  <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">Category</label>
                   <div className="relative">
                     <select
-                      value={supportProductId}
-                      onChange={e => setSupportProductId(e.target.value)}
+                      value={supportCategory}
+                      onChange={e => setSupportCategory(e.target.value)}
                       className="w-full appearance-none px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-[#005B63]"
                     >
-                      <option value="">— Entire Order Inquiry —</option>
-                      {selectedOrderData.items.map(item => (
-                        <option key={item.id} value={item.id}>{item.name} (Qty: {item.qty})</option>
+                      {Object.entries(categoryLabels).map(([val, label]) => (
+                        <option key={val} value={val}>{label}</option>
                       ))}
                     </select>
                     <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
-              )}
 
-              {/* Step 3: Category */}
-              <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">3. Issue Category</label>
-                <div className="relative">
-                  <select
-                    value={supportCategory}
-                    onChange={e => setSupportCategory(e.target.value)}
-                    className="w-full appearance-none px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-[#005B63]"
-                  >
-                    <option value="Damaged Item">Damaged Item Received</option>
-                    <option value="Wrong Item">Wrong Item Delivered</option>
-                    <option value="Delay in Delivery">Delivery Delay Query</option>
-                    <option value="Setup & Demo Request">Equipment Setup &amp; Demonstration Request</option>
-                    <option value="Warranty Claim">Warranty Claim Inquiry</option>
-                    <option value="Payment Issue">Payment &amp; Refund issue</option>
-                    <option value="Other">Other Query</option>
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                {/* Priority */}
+                <div>
+                  <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">Priority</label>
+                  <div className="relative">
+                    <select
+                      value={supportPriority}
+                      onChange={e => setSupportPriority(e.target.value as any)}
+                      className="w-full appearance-none px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-[#005B63]"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="critical">Critical</option>
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </div>
               </div>
 
-              {/* Step 4: Describe */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Select Order */}
+                <div>
+                  <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">Select Reference Order (Optional)</label>
+                  <div className="relative">
+                    <select
+                      value={supportOrderId}
+                      onChange={e => { setSupportOrderId(e.target.value); setSupportProductId(''); }}
+                      className="w-full appearance-none px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-[#005B63]"
+                    >
+                      <option value="">— No Order Related —</option>
+                      {orders.map(o => (
+                        <option key={o.id} value={o.id}>Order #{o.id} ({o.date}) — ₹{o.total.toLocaleString()}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Select Product */}
+                {supportOrderId && selectedOrderData && (
+                  <div>
+                    <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">Select Reference Product (Optional)</label>
+                    <div className="relative">
+                      <select
+                        value={supportProductId}
+                        onChange={e => setSupportProductId(e.target.value)}
+                        className="w-full appearance-none px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-[#005B63]"
+                      >
+                        <option value="">— Entire Order Inquiry —</option>
+                        {selectedOrderData.items.map(item => (
+                          <option key={item.id} value={item.id}>{item.name} (Qty: {item.qty})</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Describe */}
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">4. Describe the Issue</label>
+                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">Describe the Issue</label>
                 <textarea
                   rows={4}
-                  placeholder="Explain details of the query so our clinical helpdesk team can investigate immediately..."
+                  placeholder="Explain details of your query so our helpdesk team can investigate immediately..."
                   value={supportDescription}
                   onChange={e => setSupportDescription(e.target.value)}
                   className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-[#005B63] resize-none"
                 />
               </div>
 
-              {/* Step 5: Upload image placeholder */}
+              {/* Upload image file */}
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">5. Attachment Photos (Optional)</label>
-                <div className="border-2 border-dashed border-slate-200 hover:border-[#005B63] rounded-xl p-6 text-center cursor-pointer transition-colors bg-slate-50/50">
+                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">Attachment (Optional)</label>
+                <div className="relative border-2 border-dashed border-slate-200 hover:border-[#005B63] rounded-xl p-5 text-center transition-colors bg-slate-50/50">
+                  <input
+                    type="file"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={e => {
+                      const file = e.target.files?.[0] || null;
+                      setSupportAttachment(file);
+                    }}
+                  />
                   <Upload className="w-6 h-6 text-slate-400 mx-auto mb-2" />
-                  <p className="text-xs text-slate-500 font-semibold">Click to upload photos of damaged / incorrect items</p>
-                  <p className="text-[10px] text-slate-300 mt-0.5">PNG, JPG up to 5MB</p>
+                  <p className="text-xs text-slate-500 font-semibold">
+                    {supportAttachment ? supportAttachment.name : 'Click or drag to upload files'}
+                  </p>
+                  <p className="text-[10px] text-slate-300 mt-0.5">PDF, PNG, JPG, ZIP, MP4, TXT up to 20MB</p>
                 </div>
               </div>
 
               <div className="flex gap-3 pt-3 border-t border-slate-100">
-                <button onClick={handleSupportSubmit} className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white cursor-pointer" style={{ background: TEAL }}>
-                  Submit Ticket
+                <button
+                  onClick={handleSupportSubmit}
+                  disabled={submittingSupportTicket}
+                  className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white cursor-pointer transition-all hover:bg-[#004b52] disabled:opacity-50"
+                  style={{ background: TEAL }}
+                >
+                  {submittingSupportTicket ? 'Submitting...' : 'Submit Ticket'}
                 </button>
-                <button onClick={() => setIsCreatingTicket(false)} className="px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-slate-200 text-slate-500 cursor-pointer">
+                <button onClick={() => setIsCreatingTicket(false)} className="px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-slate-200 text-slate-500 cursor-pointer hover:bg-slate-50">
                   Cancel
                 </button>
               </div>
             </div>
           </div>
         ) : selectedTicket ? (
-          /* Ticket details dialogue modal */
-          <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4 shadow-sm">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div>
-                <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Ticket Reference</span>
-                <h3 className="text-sm font-black text-slate-800">{selectedTicket.id}</h3>
+          /* Ticket details conversation thread */
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 p-6 space-y-6 shadow-xs flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Ticket Reference</span>
+                    <h3 className="text-sm font-black text-slate-800">{selectedTicket.ticket_number}</h3>
+                  </div>
+                  <button onClick={() => setSelectedTicket(null)} className="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded-lg text-slate-500 hover:bg-slate-50 cursor-pointer">Back to List</button>
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-slate-800">{selectedTicket.subject}</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed font-sans">{selectedTicket.description}</p>
+                </div>
+
+                {/* Conversation Thread Log */}
+                <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/50 space-y-4 max-h-[300px] overflow-y-auto">
+                  {selectedTicket.messages && selectedTicket.messages.map((m: any, i: number) => {
+                    const isUserSender = m.sender_role.toLowerCase() !== 'admin';
+                    return (
+                      <div key={m.id || i} className={`flex flex-col ${isUserSender ? 'items-end' : 'items-start'}`}>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">{m.sender_name}</span>
+                          <span className="text-[8px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-extrabold uppercase">{m.sender_role}</span>
+                        </div>
+                        <div className={`p-3 rounded-xl max-w-xs text-xs font-semibold ${isUserSender ? 'bg-[#005B63] text-white rounded-tr-none' : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none'}`}>
+                          <p className="whitespace-pre-line">{m.message}</p>
+                          {m.attachment && (
+                            <div className="mt-2 pt-2 border-t border-current/20">
+                              <a
+                                href={m.attachment_url || m.attachment}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[10px] font-bold underline hover:opacity-85"
+                              >
+                                <Paperclip className="w-3.5 h-3.5" /> View Attachment
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[8px] text-slate-400 mt-1">
+                          {new Date(m.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <button onClick={() => setSelectedTicket(null)} className="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded-lg text-slate-500 hover:bg-slate-50">Back to List</button>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400">Subject: <span className="font-semibold text-slate-700">{selectedTicket.subject}</span></p>
-              <p className="text-xs text-slate-400 mt-0.5">Category: <span className="font-semibold text-slate-700">{selectedTicket.category}</span></p>
-              <p className="text-xs text-slate-400">Linked Order: <span className="font-semibold text-slate-700">#{selectedTicket.orderId}</span></p>
+
+              {/* Reply Box Form */}
+              {selectedTicket.status !== 'closed' && (
+                <form onSubmit={handleReplySubmit} className="pt-4 border-t border-slate-100 space-y-3">
+                  <div>
+                    <label className="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-1">Write Response</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Type your message to helpdesk..."
+                      value={supportReplyText}
+                      onChange={e => setSupportReplyText(e.target.value)}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-[#005B63] resize-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div className="relative">
+                      <input
+                        type="file"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        onChange={e => {
+                          const file = e.target.files?.[0] || null;
+                          setSupportReplyAttachment(file);
+                        }}
+                      />
+                      <button type="button" className="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-500 hover:bg-slate-50 cursor-pointer">
+                        <Paperclip className="w-3.5 h-3.5" />
+                        {supportReplyAttachment ? supportReplyAttachment.name : 'Attach File'}
+                      </button>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={submittingSupportReply}
+                      className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white cursor-pointer transition-all hover:bg-[#004b52] disabled:opacity-50 shrink-0"
+                      style={{ background: TEAL }}
+                    >
+                      {submittingSupportReply ? 'Sending...' : 'Send Message'}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
 
-            {/* Conversation Log */}
-            <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/50 space-y-3 max-h-60 overflow-y-auto">
-              {selectedTicket.messages.map((m, i) => (
-                <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div className={`p-3 rounded-xl max-w-xs text-xs font-semibold ${m.sender === 'user' ? 'bg-[#005B63] text-white rounded-tr-none' : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none'}`}>
-                    <p>{m.text}</p>
+            {/* Ticket Info Card */}
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4 shadow-xs">
+                <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider pb-3 border-b border-slate-100">Ticket Details</h3>
+
+                <div className="space-y-3">
+                  <div>
+                    <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Status</span>
+                    <span className={`inline-block text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border mt-1 ${
+                      ticketStatusLabels[selectedTicket.status]?.color || 'bg-slate-50 text-slate-600'
+                    }`}>
+                      {ticketStatusLabels[selectedTicket.status]?.label || selectedTicket.status}
+                    </span>
                   </div>
-                  <span className="text-[8px] text-slate-400 mt-1">{m.date}</span>
+
+                  <div>
+                    <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Priority</span>
+                    <span className={`inline-block text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full mt-1 ${
+                      ticketPriorityLabels[selectedTicket.priority]?.color || 'bg-slate-50 text-slate-600'
+                    }`}>
+                      {selectedTicket.priority}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Category</span>
+                    <p className="text-xs font-bold text-slate-800 mt-0.5">{categoryLabels[selectedTicket.category] || selectedTicket.category}</p>
+                  </div>
+
+                  {selectedTicket.order_detail && (
+                    <div>
+                      <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Linked Order</span>
+                      <p className="text-xs font-bold text-[#005B63] mt-0.5">Order #{selectedTicket.order_detail.order_number}</p>
+                    </div>
+                  )}
+
+                  {selectedTicket.product_detail && (
+                    <div>
+                      <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Linked Product</span>
+                      <p className="text-xs font-bold text-[#005B63] mt-0.5">{selectedTicket.product_detail.name}</p>
+                    </div>
+                  )}
+
+                  <div>
+                    <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Created Date</span>
+                    <p className="text-xs font-bold text-slate-800 mt-0.5">
+                      {new Date(selectedTicket.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </p>
+                  </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Status timeline */}
+              <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4 shadow-xs">
+                <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider pb-3 border-b border-slate-100">Status History</h3>
+                {selectedTicket.timeline && selectedTicket.timeline.length > 0 ? (
+                  <div className="relative border-l border-slate-100 pl-4 ml-2 space-y-4">
+                    {selectedTicket.timeline.map((evt: any, idx: number) => (
+                      <div key={evt.id || idx} className="relative">
+                        <div className="absolute -left-[21.5px] top-1 w-2 h-2 rounded-full bg-[#005B63]" />
+                        <div className="space-y-0.5">
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-bold text-slate-800 text-[10px]">{evt.action}</span>
+                            <span className="text-[8px] text-slate-400 font-medium">
+                              {new Date(evt.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          {evt.performed_by_name && (
+                            <p className="text-[8px] text-[#005B63] font-bold">
+                              By {evt.performed_by_name} ({evt.performed_by_role})
+                            </p>
+                          )}
+                          {evt.notes && (
+                            <p className="text-[9px] text-slate-400 leading-relaxed font-sans">{evt.notes}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-400">No events logged.</p>
+                )}
+              </div>
             </div>
           </div>
         ) : (
@@ -2256,29 +2569,62 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({
             <div className="p-4 border-b border-slate-50">
               <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Ticket History</h3>
             </div>
-            {supportTickets.length === 0 ? (
+            {supportLoading ? (
+              <div className="p-10 text-center text-xs font-semibold text-slate-400">Loading tickets...</div>
+            ) : supportTickets.length === 0 ? (
               <EmptyState icon={<Ticket className="w-8 h-8" />} title="No Tickets Filed" subtitle="Your support queries history will be tracked here." />
             ) : (
-              <div className="divide-y divide-slate-50">
-                {supportTickets.map(t => (
-                  <div
-                    key={t.id}
-                    onClick={() => setSelectedTicket(t)}
-                    className="p-5 flex items-center justify-between gap-4 hover:bg-slate-50/40 cursor-pointer transition-colors"
-                  >
-                    <div>
-                      <h4 className="text-xs font-black text-slate-800">{t.subject}</h4>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Reference ID: {t.id} · Filed: {t.date}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${t.status === 'resolved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
-                        }`}>
-                        {t.status}
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-slate-400" />
-                    </div>
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/75 border-b border-slate-100">
+                      <th className="p-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Ticket Number</th>
+                      <th className="p-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Subject</th>
+                      <th className="p-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Category</th>
+                      <th className="p-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Priority</th>
+                      <th className="p-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                      <th className="p-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Created Date</th>
+                      <th className="p-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Last Updated</th>
+                      <th className="p-4"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {supportTickets.map(t => (
+                      <tr
+                        key={t.id}
+                        onClick={() => setSelectedTicket(t)}
+                        className="hover:bg-slate-50/40 cursor-pointer transition-colors"
+                      >
+                        <td className="p-4 text-xs font-bold text-slate-800 font-mono">{t.ticket_number}</td>
+                        <td className="p-4 text-xs font-semibold text-slate-800">{t.subject}</td>
+                        <td className="p-4 text-xs font-medium text-slate-600">{categoryLabels[t.category] || t.category}</td>
+                        <td className="p-4 text-xs">
+                          <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                            ticketPriorityLabels[t.priority]?.color || 'bg-slate-50 text-slate-600'
+                          }`}>
+                            {t.priority}
+                          </span>
+                        </td>
+                        <td className="p-4 text-xs">
+                          <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${
+                            ticketStatusLabels[t.status]?.color || 'bg-slate-50 text-slate-600'
+                          }`}>
+                            {ticketStatusLabels[t.status]?.label || t.status}
+                          </span>
+                        </td>
+                        <td className="p-4 text-xs font-semibold text-slate-500">
+                          {new Date(t.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="p-4 text-xs font-semibold text-slate-500">
+                          {new Date(t.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="p-4 text-right">
+                          <ChevronRight className="w-4 h-4 text-slate-400 inline" />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

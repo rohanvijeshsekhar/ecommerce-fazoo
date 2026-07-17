@@ -79,9 +79,9 @@ urlpatterns = [
                 # Phase 11+ – Warranty
                 path("warranty/", include("apps.warranty.urls")),
                 # Phase 12+ – Support
-                # path("support/", include("apps.support.urls")),
+                path("support/", include("apps.support.urls")),
                 # Phase 13+ – Notifications
-                # path("notifications/", include("apps.notifications.urls")),
+                path("notifications/", include("apps.notifications.urls")),
             ]
         ),
     ),

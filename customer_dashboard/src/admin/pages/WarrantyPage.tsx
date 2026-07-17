@@ -2,13 +2,25 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Wrench, RefreshCw, Search,
-  ChevronDown, Eye, CheckCircle, AlertCircle
+  ChevronDown, Eye, Package
 } from 'lucide-react';
 import { warrantyService } from '../../services/warranty';
 import type { WarrantyRegistration, WarrantyClaim, AdminWarrantyStats } from '../../services/warranty';
+import SectionHeader from '../components/SectionHeader';
+import StatusBadge from '../components/StatusBadge';
+import EmptyState from '../components/EmptyState';
+import StatCard from '../components/StatCard';
+import { useToast } from '../components/Toast';
+import { useBreadcrumbSync } from '../contexts/BreadcrumbContext';
 
 const WarrantyPage: React.FC = () => {
+  useBreadcrumbSync([
+    { label: 'Operations' },
+    { label: 'Warranties', path: '/admin/warranty' },
+  ]);
+
   const navigate = useNavigate();
+  const toast = useToast();
 
   // Stats State
   const [stats, setStats] = useState<AdminWarrantyStats | null>(null);
@@ -18,9 +30,7 @@ const WarrantyPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'claims' | 'registrations'>('registrations');
 
   // Sub-filter States
-  // Registrations sub-filter: 'pending_verification' | 'active' | 'rejected'
   const [regSubFilter, setRegSubFilter] = useState<'pending_verification' | 'active' | 'rejected'>('pending_verification');
-  // Claims sub-filter: 'submitted' | 'under_review' | 'approved' | 'assigned' | 'repair_in_progress' | 'completed' | 'closed' | 'rejected'
   const [claimSubFilter, setClaimSubFilter] = useState<string>('submitted');
 
   // List States
@@ -114,56 +124,61 @@ const WarrantyPage: React.FC = () => {
     setSearchProduct('');
     setStartDate('');
     setEndDate('');
+    toast.info('Filters reset.');
   };
 
   const getStatusBadge = (statusVal: string) => {
     switch (statusVal) {
       case 'submitted':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-100">Submitted</span>;
+        return <StatusBadge variant="info" label="Submitted" />;
       case 'under_review':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-100">Under Review</span>;
+        return <StatusBadge variant="warning" label="Under Review" />;
       case 'need_more_info':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-100">Need Info</span>;
+        return <StatusBadge variant="purple" label="Need Info" />;
       case 'approved':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-100">Approved</span>;
+        return <StatusBadge variant="success" label="Approved" />;
       case 'assigned':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-sky-700 bg-sky-50 border border-sky-100">Assigned</span>;
+        return <StatusBadge variant="info" label="Assigned" />;
       case 'repair_in_progress':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-100 border border-amber-200">In Repair</span>;
+        return <StatusBadge variant="warning" label="In Repair" />;
       case 'completed':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100">Completed</span>;
+        return <StatusBadge variant="success" label="Completed" />;
       case 'closed':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-slate-700 bg-slate-50 border border-slate-200">Closed</span>;
+        return <StatusBadge variant="neutral" label="Closed" />;
       case 'rejected':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-100">Rejected</span>;
+        return <StatusBadge variant="error" label="Rejected" />;
       default:
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold text-slate-500 bg-slate-50">{statusVal}</span>;
+        return <StatusBadge variant="neutral" label={statusVal} />;
     }
   };
 
   const getRegistrationStatusBadge = (statusVal: string) => {
     switch (statusVal) {
       case 'pending_registration':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-100">Pending Registration</span>;
+        return <StatusBadge variant="neutral" label="Pending Registration" />;
       case 'pending_verification':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-100">Awaiting Verification</span>;
+        return <StatusBadge variant="warning" label="Awaiting Verification" />;
       case 'need_more_info':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-100">Need Info</span>;
+        return <StatusBadge variant="purple" label="Need Info" />;
       case 'active':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100">Active</span>;
+        return <StatusBadge variant="success" label="Active" />;
       case 'rejected':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-100">Rejected</span>;
+        return <StatusBadge variant="error" label="Rejected" />;
       default:
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold text-slate-500 bg-slate-50">{statusVal}</span>;
+        return <StatusBadge variant="neutral" label={statusVal} />;
     }
   };
 
   const getPriorityBadge = (priorityVal: string) => {
     switch (priorityVal) {
-      case 'critical': return <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-rose-500 text-white tracking-wider">Critical</span>;
-      case 'high': return <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-orange-500 text-white tracking-wider">High</span>;
-      case 'medium': return <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-amber-500 text-white tracking-wider">Medium</span>;
-      default: return <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-slate-400 text-white tracking-wider">Low</span>;
+      case 'critical':
+        return <StatusBadge variant="error" label="Critical" />;
+      case 'high':
+        return <StatusBadge variant="warning" label="High" />;
+      case 'medium':
+        return <StatusBadge variant="info" label="Medium" />;
+      default:
+        return <StatusBadge variant="neutral" label="Low" />;
     }
   };
 
@@ -171,13 +186,13 @@ const WarrantyPage: React.FC = () => {
     <div className="space-y-6 text-left font-sans select-none">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-black text-slate-800 tracking-tight font-display">FAAZO Warranty Operations</h1>
-          <p className="text-xs text-slate-400 mt-1">Verify manual customer registration submissions and resolve equipment trouble tickets.</p>
-        </div>
+        <SectionHeader
+          title="FAAZO Warranty Operations"
+          subtitle="Verify manual customer registration submissions and resolve equipment trouble tickets."
+        />
         <button
-          onClick={() => { fetchStats(); fetchData(); }}
-          className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all cursor-pointer"
+          onClick={() => { fetchStats(); fetchData(); toast.success('Sync complete.'); }}
+          className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all cursor-pointer bg-white self-start md:self-auto"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Refresh Dashboard
         </button>
@@ -190,41 +205,46 @@ const WarrantyPage: React.FC = () => {
         </div>
       ) : stats ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-5 border border-slate-100 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.015)]">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Verification Backlog</span>
-              <AlertCircle className="w-4 h-4 text-amber-500" />
-            </div>
-            <p className="text-2xl font-black text-slate-800 tracking-tight">{stats.regs_pending_verification}</p>
-            <span className="text-[9px] font-bold text-slate-400">{stats.regs_approved} Total Approved Assets</span>
-          </div>
-
-          <div className="bg-white p-5 border border-slate-100 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.015)]">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Claims Submitted</span>
-              <Wrench className="w-4 h-4 text-[#005B63]" />
-            </div>
-            <p className="text-2xl font-black text-slate-800 tracking-tight">{stats.claims_submitted}</p>
-            <span className="text-[9px] font-bold text-amber-600">⌛ {stats.claims_under_review} Under Review</span>
-          </div>
-
-          <div className="bg-white p-5 border border-slate-100 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.015)]">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">In Workshop</span>
-              <RefreshCw className="w-4 h-4 text-purple-500" />
-            </div>
-            <p className="text-2xl font-black text-slate-800 tracking-tight">{stats.claims_repair_in_progress}</p>
-            <span className="text-[9px] font-bold text-[#005B63]">{stats.claims_assigned} Provider Assigned</span>
-          </div>
-
-          <div className="bg-white p-5 border border-slate-100 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.015)]">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Resolved Claims</span>
-              <CheckCircle className="w-4 h-4 text-emerald-500" />
-            </div>
-            <p className="text-2xl font-black text-slate-800 tracking-tight">{stats.claims_completed}</p>
-            <span className="text-[9px] font-bold text-slate-400">{stats.claims_closed} Claims Closed</span>
-          </div>
+          <StatCard
+            stat={{
+              id: 'regs_pending_verification',
+              label: 'Verification Backlog',
+              value: stats.regs_pending_verification,
+              variant: 'orange',
+              icon: 'AlertCircle',
+              subValue: `${stats.regs_approved} Total Approved Assets`
+            }}
+          />
+          <StatCard
+            stat={{
+              id: 'claims_submitted',
+              label: 'Claims Submitted',
+              value: stats.claims_submitted,
+              variant: 'teal',
+              icon: 'Wrench',
+              subValue: `${stats.claims_under_review} Under Review`
+            }}
+          />
+          <StatCard
+            stat={{
+              id: 'claims_repair_in_progress',
+              label: 'In Workshop',
+              value: stats.claims_repair_in_progress,
+              variant: 'purple',
+              icon: 'RefreshCw',
+              subValue: `${stats.claims_assigned} Provider Assigned`
+            }}
+          />
+          <StatCard
+            stat={{
+              id: 'claims_completed',
+              label: 'Resolved Claims',
+              value: stats.claims_completed,
+              variant: 'green',
+              icon: 'CheckCircle',
+              subValue: `${stats.claims_closed} Claims Closed`
+            }}
+          />
         </div>
       ) : null}
 
@@ -258,7 +278,7 @@ const WarrantyPage: React.FC = () => {
           <>
             <button
               onClick={() => setRegSubFilter('pending_verification')}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all ${
                 regSubFilter === 'pending_verification'
                   ? 'bg-[#005B63] text-white'
                   : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -268,7 +288,7 @@ const WarrantyPage: React.FC = () => {
             </button>
             <button
               onClick={() => setRegSubFilter('active')}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all ${
                 regSubFilter === 'active'
                   ? 'bg-[#005B63] text-white'
                   : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -278,7 +298,7 @@ const WarrantyPage: React.FC = () => {
             </button>
             <button
               onClick={() => setRegSubFilter('rejected')}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all ${
                 regSubFilter === 'rejected'
                   ? 'bg-[#005B63] text-white'
                   : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -301,7 +321,7 @@ const WarrantyPage: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setClaimSubFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all ${
                   claimSubFilter === tab.id
                     ? 'bg-[#005B63] text-white'
                     : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -315,7 +335,7 @@ const WarrantyPage: React.FC = () => {
       </div>
 
       {/* Main Filter Toolbar */}
-      <div className="bg-white border border-slate-100 p-5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.01)] space-y-4">
+      <div className="bg-white border border-slate-100 p-5 rounded-2xl shadow-xs space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs font-semibold text-slate-700">
           <div>
             <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Search Customer</label>
@@ -325,7 +345,7 @@ const WarrantyPage: React.FC = () => {
                 placeholder="Doctor name or email..."
                 value={searchCustomer}
                 onChange={e => setSearchCustomer(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63]"
+                className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63] bg-white text-xs"
               />
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             </div>
@@ -337,7 +357,7 @@ const WarrantyPage: React.FC = () => {
               <select
                 value={filterRole}
                 onChange={e => setFilterRole(e.target.value)}
-                className="w-full appearance-none pl-3 pr-8 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-[#005B63]"
+                className="w-full appearance-none pl-3 pr-8 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-[#005B63] text-xs"
               >
                 <option value="">All Account Roles</option>
                 <option value="customer">Customer (Practitioner)</option>
@@ -348,14 +368,14 @@ const WarrantyPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Search Product</label>
+            <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Product Name</label>
             <div className="relative">
               <input
                 type="text"
-                placeholder="SKU or product name..."
+                placeholder="Search equipment..."
                 value={searchProduct}
                 onChange={e => setSearchProduct(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63]"
+                className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63] bg-white text-xs"
               />
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             </div>
@@ -363,46 +383,52 @@ const WarrantyPage: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Start Date</label>
+              <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">From Date</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="w-full px-2 py-1.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63]"
+                className="w-full px-3 py-1.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63] bg-white text-xs"
               />
             </div>
             <div>
-              <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">End Date</label>
+              <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">To Date</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="w-full px-2 py-1.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63]"
+                className="w-full px-3 py-1.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63] bg-white text-xs"
               />
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end pt-2">
-          <button
-            onClick={handleResetFilters}
-            className="px-6 py-2 border border-slate-200 hover:bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-500 rounded-xl transition-all cursor-pointer"
-          >
-            Clear Filters
-          </button>
-        </div>
+        {(searchCustomer || filterRole || searchProduct || startDate || endDate) && (
+          <div className="flex justify-end pt-1">
+            <button
+              onClick={handleResetFilters}
+              className="text-[10px] font-bold text-rose-600 hover:text-rose-800 transition-colors uppercase tracking-widest cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Main List Table */}
-      <div className="bg-white border border-slate-100 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.01)] overflow-hidden font-sans">
+      {/* Main List Container */}
+      <div className="bg-white border border-slate-100 rounded-2xl shadow-xs overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-slate-400 space-y-3">
             <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#005B63]" />
-            <p className="text-xs font-bold">Synchronizing registry ledger...</p>
+            <p className="text-xs font-bold uppercase tracking-wider">Synchronizing registry ledger...</p>
           </div>
         ) : activeTab === 'registrations' ? (
           regs.length === 0 ? (
-            <div className="p-12 text-center text-slate-400 italic">No warranty registrations match this status filter.</div>
+            <EmptyState
+              title="No registrations found"
+              description="There are no warranty registrations matching the status filter."
+              icon={<Package className="w-8 h-8 text-slate-300" />}
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -421,7 +447,7 @@ const WarrantyPage: React.FC = () => {
                 <tbody className="divide-y divide-slate-50 text-xs">
                   {regs.map(reg => (
                     <tr key={reg.id} className="hover:bg-slate-50/40 transition-colors">
-                      <td className="p-4 font-mono font-bold text-slate-500">#{reg.id.substring(0, 8)}</td>
+                      <td className="p-4 font-mono font-bold text-slate-500">#{reg.id.substring(0, 8).toUpperCase()}</td>
                       <td className="p-4">
                         <p className="font-bold text-slate-700">{reg.user?.full_name}</p>
                         <span className="text-[10px] text-slate-400 capitalize">{reg.user?.role}</span>
@@ -452,7 +478,11 @@ const WarrantyPage: React.FC = () => {
           )
         ) : (
           claims.length === 0 ? (
-            <div className="p-12 text-center text-slate-400 italic">No claims match this status filter.</div>
+            <EmptyState
+              title="No warranty claims found"
+              description="There are no active warranty claims matching the status filter."
+              icon={<Wrench className="w-8 h-8 text-slate-300" />}
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -471,7 +501,7 @@ const WarrantyPage: React.FC = () => {
                 <tbody className="divide-y divide-slate-50 text-xs">
                   {claims.map(claim => (
                     <tr key={claim.id} className="hover:bg-slate-50/40 transition-colors">
-                      <td className="p-4 font-black text-slate-800">{claim.claim_number}</td>
+                      <td className="p-4 font-black text-slate-800 font-mono">{claim.claim_number}</td>
                       <td className="p-4">
                         <p className="font-bold text-slate-700">{claim.registration_detail?.user?.full_name}</p>
                         <span className="text-[10px] text-slate-400 capitalize">{claim.registration_detail?.user?.role}</span>
@@ -504,11 +534,11 @@ const WarrantyPage: React.FC = () => {
 
         {/* Pagination controls */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-slate-50 flex items-center justify-between text-xs font-semibold text-slate-500">
+          <div className="p-4 border-t border-slate-50 flex items-center justify-between text-xs font-semibold text-slate-500 bg-white">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-4 py-2 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+              className="px-4 py-2 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 cursor-pointer bg-white transition-all"
             >
               Previous
             </button>
@@ -516,7 +546,7 @@ const WarrantyPage: React.FC = () => {
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-4 py-2 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+              className="px-4 py-2 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 cursor-pointer bg-white transition-all"
             >
               Next
             </button>

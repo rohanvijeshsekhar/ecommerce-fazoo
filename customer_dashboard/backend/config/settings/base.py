@@ -71,8 +71,8 @@ LOCAL_APPS = [
     "apps.orders",
     "apps.payments",
     # ── Phase 12+: Post-Purchase ────────────────────────────
-    # "apps.notifications",
-    # "apps.support",
+    "apps.notifications",
+    "apps.support",
     "apps.warranty",
 ]
 

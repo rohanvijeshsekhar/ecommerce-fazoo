@@ -19,6 +19,9 @@ import AdminOrderDetailPage from './pages/AdminOrderDetailPage';
 import WarrantyPage from './pages/WarrantyPage';
 import WarrantyClaimDetailPage from './pages/WarrantyClaimDetailPage';
 import WarrantyRegistrationDetailPage from './pages/WarrantyRegistrationDetailPage';
+import SupportPage from './pages/SupportPage';
+import SupportDetailPage from './pages/SupportDetailPage';
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AdminRoutes — All admin route definitions
@@ -60,10 +63,8 @@ const AdminRoutes: React.FC = () => (
       <Route path="warranty" element={<WarrantyPage />} />
       <Route path="warranty/registrations/:id" element={<WarrantyRegistrationDetailPage />} />
       <Route path="warranty/claims/:id" element={<WarrantyClaimDetailPage />} />
-      <Route
-        path="support"
-        element={<ComingSoon module="Support" description="Manage customer support tickets and escalations." />}
-      />
+      <Route path="support" element={<SupportPage />} />
+      <Route path="support/:id" element={<SupportDetailPage />} />
 
       {/* Intelligence — Phase 5E */}
       <Route
