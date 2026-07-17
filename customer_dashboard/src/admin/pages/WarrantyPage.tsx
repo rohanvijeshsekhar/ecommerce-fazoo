@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Wrench, RefreshCw, Search,
-  ChevronDown, Eye, Package, SlidersHorizontal, X
+  ChevronDown, Eye, Package, SlidersHorizontal, X, ArrowLeft
 } from 'lucide-react';
 import { warrantyService } from '../../services/warranty';
 import type { WarrantyRegistration, WarrantyClaim, AdminWarrantyStats } from '../../services/warranty';
@@ -187,6 +187,16 @@ const WarrantyPage: React.FC = () => {
 
   return (
     <div className="space-y-6 text-left font-sans select-none">
+      {/* Back Button */}
+      <div>
+        <button
+          onClick={() => navigate('/admin')}
+          className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer bg-transparent border-0"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
+        </button>
+      </div>
+
       {/* Page Header */}
       <SectionHeader
         title="Warranty Operations"
@@ -252,7 +262,7 @@ const WarrantyPage: React.FC = () => {
       ) : null}
 
       {/* Main Tabs */}
-      <div className="flex border-b border-slate-100 mt-6">
+      <div className="flex border-b border-slate-100 mt-8 mb-4">
         <button
           onClick={() => setActiveTab('registrations')}
           className={`px-5 py-3.5 text-xs font-black uppercase tracking-widest border-b-2 cursor-pointer transition-all ${

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  HeadphonesIcon, RefreshCw, Search, ChevronDown, ChevronRight, SlidersHorizontal, X
+  HeadphonesIcon, RefreshCw, Search, ChevronDown, ChevronRight, SlidersHorizontal, X, ArrowLeft
 } from 'lucide-react';
 import { supportService } from '../../services/support';
 import type { SupportTicket } from '../../services/support';
@@ -142,6 +142,16 @@ const SupportPage: React.FC = () => {
 
   return (
     <div className="space-y-6 text-left font-sans select-none">
+      {/* Back Button */}
+      <div>
+        <button
+          onClick={() => navigate('/admin')}
+          className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer bg-transparent border-0"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
+        </button>
+      </div>
+
       {/* Header */}
       <SectionHeader
         title="FAAZO Support Desk"
@@ -157,7 +167,7 @@ const SupportPage: React.FC = () => {
       />
 
       {/* Stats cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-8 mb-8">
         <StatCard
           stat={{
             id: 'open',
