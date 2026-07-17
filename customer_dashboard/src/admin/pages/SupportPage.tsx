@@ -215,27 +215,27 @@ const SupportPage: React.FC = () => {
       </div>
 
       {/* Filters Panel */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-4 shadow-xs">
-        <div className="flex items-center gap-2.5 flex-wrap">
+      <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-xs">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Search Keywords */}
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
             <input
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search by ticket #, user name, subject..."
-              className="w-full pl-9 pr-4 py-2 text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63] focus:ring-2 focus:ring-[#005B63]/10 transition-all placeholder:text-slate-400"
+              className="w-full pl-10 pr-4 py-2.5 text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#005B63] focus:ring-2 focus:ring-[#005B63]/10 transition-all placeholder:text-slate-400"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                <X className="w-3.5 h-3.5" />
+              <button onClick={() => setSearch('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
 
           {/* Quick status filter pills */}
-          <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-0.5">
+          <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
             {[
               { id: '', label: 'All' },
               { id: 'open', label: 'Open' },
@@ -247,7 +247,7 @@ const SupportPage: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setFilterStatus(tab.id)}
-                className={`px-3 py-1.5 text-[10px] font-bold rounded-lg capitalize transition-all ${
+                className={`px-4 py-2 text-xs font-bold rounded-lg capitalize transition-all ${
                   filterStatus === tab.id ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -259,17 +259,17 @@ const SupportPage: React.FC = () => {
           {/* Sliders toggle for advanced filters */}
           <button
             onClick={() => setShowFilters(v => !v)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border transition-all cursor-pointer bg-white ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-xl border transition-all cursor-pointer bg-white ${
               showFilters ? 'bg-[#005B63] text-white border-[#005B63]' : 'text-slate-600 border-slate-200 hover:border-slate-300'
             }`}
           >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <SlidersHorizontal className="w-4 h-4" />
             Filters {hasFilters && <span className="w-1.5 h-1.5 bg-rose-500 rounded-full" />}
           </button>
 
           {hasFilters && (
             <button onClick={handleResetFilters} className="text-xs text-rose-600 font-semibold hover:underline flex items-center gap-1">
-              <X className="w-3.5 h-3.5" /> Clear
+              <X className="w-4 h-4" /> Clear
             </button>
           )}
         </div>
