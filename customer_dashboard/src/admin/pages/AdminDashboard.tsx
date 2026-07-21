@@ -218,19 +218,6 @@ const AdminDashboard: React.FC = () => {
     <div className="space-y-8 max-w-[1600px] mx-auto pb-16 px-4 md:px-6">
 
       {/* ── Top Hero Section ── */}
-      <div className="bg-gradient-to-br from-[#005F63]/[0.02] via-[#0B7C80]/[0.04] to-white border border-[#005F63]/10 rounded-[24px] p-6 md:p-8 shadow-[0_8px_30px_rgba(0,95,99,0.015)] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="space-y-2.5">
-          <span className="text-[11px] font-bold text-[#005F63] uppercase tracking-widest bg-[#005F63]/8 px-3 py-1 rounded-full">
-            Platform control center
-          </span>
-          <h1 className="text-[36px] md:text-[40px] font-extrabold text-[#111827] tracking-tight leading-none">
-            {getGreeting()}, <span className="text-[#005F63]">{adminName}</span>
-          </h1>
-          <p className="text-[13px] text-[#64748B] font-medium flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <span>{dateStr}</span>
-            <span className="text-slate-300">•</span>
-            <Clock className="w-4 h-4 text-slate-400" />
       <div className="bg-gradient-to-r from-[#004D54] via-[#005F63] to-[#0B7C80] rounded-[32px] p-8 md:p-10 text-white relative overflow-hidden shadow-[0_20px_50px_rgba(0,95,99,0.2)]">
         <div className="absolute -right-10 -bottom-20 w-96 h-96 rounded-full bg-white/[0.04] blur-3xl pointer-events-none" />
         <div className="absolute right-60 -top-20 w-72 h-72 rounded-full bg-[#F58220]/[0.08] blur-2xl pointer-events-none" />
