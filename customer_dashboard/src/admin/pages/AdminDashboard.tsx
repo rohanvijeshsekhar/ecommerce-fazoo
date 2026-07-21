@@ -8,8 +8,9 @@ import {
 } from 'lucide-react';
 import { useBreadcrumbSync } from '../contexts/BreadcrumbContext';
 import { useAuth } from '../../hooks/useAuth';
-import { dashboardService, adminService, adminCustomersService, adminDealersService } from '../services/adminService';
+import { dashboardService, adminService, adminCustomersService, adminDealersService, adminOrdersService } from '../services/adminService';
 import type { DashboardStat } from '../types/admin';
+import type { OrderDetail } from '../../services/ordersService';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Interactive Mock Data for Sales Analytics (with 1 Year support)
@@ -65,14 +66,6 @@ const ANALYTICS_DATA: Record<string, Record<string, { labels: string[]; values: 
   }
 };
 
-const RECENT_ORDERS = [
-  { id: 'ORD-9024', customer: 'Dr. Amit Patel', avatar: 'AP', amount: '₹1,24,500', status: 'Completed', date: 'Jul 7, 2026' },
-  { id: 'ORD-9023', customer: 'Dr. Sneha Rao', avatar: 'SR', amount: '₹48,900', status: 'Processing', date: 'Jul 7, 2026' },
-  { id: 'ORD-9022', customer: 'Care Dental Clinic', avatar: 'CD', amount: '₹2,10,000', status: 'Shipped', date: 'Jul 6, 2026' },
-  { id: 'ORD-9021', customer: 'Dr. Vikram Malhotra', avatar: 'VM', amount: '₹15,200', status: 'Completed', date: 'Jul 6, 2026' },
-  { id: 'ORD-9020', customer: 'Apex Dental Lab', avatar: 'AD', amount: '₹89,000', status: 'Pending', date: 'Jul 5, 2026' },
-];
-
 const RECENT_ACTIVITIES = [
   { type: 'product', title: 'Product listed', desc: 'Samsung S24 listed under Dental Chairs', time: '2 hours ago' },
   { type: 'brand', title: 'Brand adjusted', desc: 'Apple brand metadata and warranty policy adjusted', time: '4 hours ago' },
@@ -87,6 +80,8 @@ const AdminDashboard: React.FC = () => {
   const activeAdmin = adminUser || user;
 
   const [stats, setStats] = useState<DashboardStat[]>([]);
+  const [recentOrders, setRecentOrders] = useState<OrderDetail[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState<boolean>(true);
   const [timeStr, setTimeStr] = useState('');
   const [dateStr, setDateStr] = useState('');
   const [analyticsPeriod, setAnalyticsPeriod] = useState<'7 Days' | '30 Days' | '90 Days' | '1 Year'>('7 Days');
@@ -127,12 +122,18 @@ const AdminDashboard: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [statsRes, prodRes, customerStatsRes, dealerStatsRes] = await Promise.all([
+      const [statsRes, prodRes, customerStatsRes, dealerStatsRes, ordersRes] = await Promise.all([
         dashboardService.getStats(),
         adminService.getProducts(),
         adminCustomersService.getStats().catch(() => null),
         adminDealersService.getStats().catch(() => null),
+        adminOrdersService.getOrders().catch(() => null),
       ]);
+
+      if (ordersRes?.success && Array.isArray(ordersRes.data)) {
+        setRecentOrders(ordersRes.data.slice(0, 5));
+      }
+      setLoadingOrders(false);
 
       if (statsRes.success && statsRes.data) {
         let liveStats = [...statsRes.data];
@@ -230,89 +231,97 @@ const AdminDashboard: React.FC = () => {
             <span>{dateStr}</span>
             <span className="text-slate-300">•</span>
             <Clock className="w-4 h-4 text-slate-400" />
-            <span className="font-semibold text-slate-600">{timeStr}</span>
-          </p>
-          <p className="text-[12px] text-[#005F63] font-medium bg-[#005F63]/5 border border-[#005F63]/10 px-3.5 py-1.5 rounded-xl inline-block mt-2">
-            System status operational • You have {lowStockItems.length || 3} stock alerts and {getStatVal('pending_orders', '5')} pending orders.
-          </p>
+      <div className="bg-gradient-to-r from-[#004D54] via-[#005F63] to-[#0B7C80] rounded-[32px] p-8 md:p-10 text-white relative overflow-hidden shadow-[0_20px_50px_rgba(0,95,99,0.2)]">
+        <div className="absolute -right-10 -bottom-20 w-96 h-96 rounded-full bg-white/[0.04] blur-3xl pointer-events-none" />
+        <div className="absolute right-60 -top-20 w-72 h-72 rounded-full bg-[#F58220]/[0.08] blur-2xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs font-semibold tracking-wide text-teal-100 mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-[#F58220]" /> FAAZO Operational Hub
+            </div>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+              {getGreeting()}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-teal-100 to-amber-200">{adminName}</span>
+            </h1>
+            <p className="text-sm text-teal-100/80 font-medium max-w-xl leading-relaxed">
+              Here's your live operational overview for today. Monitor real-time orders, manage catalog inventory, and process dealer approvals seamlessly.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 text-right">
+              <p className="text-[11px] uppercase tracking-wider font-extrabold text-teal-200/90">{dateStr}</p>
+              <p className="text-xl font-black font-mono tracking-tight text-white">{timeStr}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── KPI Grid (Refined Square Layout) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* ── Main Stat Cards Grid (4 columns) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {[
           {
-            title: 'Revenue',
-            value: '₹1.84L',
-            trend: '+18.00%',
-            trendType: 'up',
-            desc: 'vs last month',
+            id: 'revenue',
+            title: 'Gross revenue',
+            value: `₹${Number(getStatVal('revenue', 0)).toLocaleString('en-IN')}`,
+            subText: 'Total orders revenue',
             icon: IndianRupee,
-            bgColor: 'bg-[#E6F4F5]',
-            iconColor: 'bg-[#005F63] text-white',
-            trendColor: 'text-[#005F63] bg-[#005F63]/8'
+            gradient: 'from-emerald-500/10 to-teal-500/5',
+            border: 'border-emerald-500/15',
+            iconBg: 'bg-emerald-500/10 text-emerald-600',
+            onClick: () => navigate('/admin/reports')
           },
           {
-            title: 'Orders',
-            value: getStatVal('orders', '0'),
-            trend: '+8.20%',
-            trendType: 'up',
-            desc: 'vs last week',
+            id: 'orders',
+            title: 'Total orders',
+            value: getStatVal('orders', 0),
+            subText: 'All time orders',
             icon: ShoppingBag,
-            bgColor: 'bg-[#F1F0FA]',
-            iconColor: 'bg-[#5D5FEF] text-white',
-            trendColor: 'text-[#5D5FEF] bg-[#5D5FEF]/8'
+            gradient: 'from-blue-500/10 to-cyan-500/5',
+            border: 'border-blue-500/15',
+            iconBg: 'bg-blue-500/10 text-blue-600',
+            onClick: () => navigate('/admin/orders')
           },
           {
-            title: 'Customers',
-            value: '842',
-            trend: '+14.80%',
-            trendType: 'up',
-            desc: 'active accounts',
+            id: 'customers',
+            title: 'Registered customers',
+            value: getStatVal('customers', 0),
+            subText: 'Active users',
             icon: Users,
-            bgColor: 'bg-[#EBF7F2]',
-            iconColor: 'bg-[#10B981] text-white',
-            trendColor: 'text-[#10B981] bg-[#10B981]/8'
+            gradient: 'from-purple-500/10 to-indigo-500/5',
+            border: 'border-purple-500/15',
+            iconBg: 'bg-purple-500/10 text-purple-600',
+            onClick: () => navigate('/admin/customers')
           },
           {
-            title: 'Products',
-            value: getStatVal('total_products', '10'),
-            trend: '+4.10%',
-            trendType: 'up',
-            desc: 'active listings',
-            icon: Package,
-            bgColor: 'bg-[#FAF0F5]',
-            iconColor: 'bg-[#EC4899] text-white',
-            trendColor: 'text-[#EC4899] bg-[#EC4899]/8'
+            id: 'dealer_approvals',
+            title: 'Pending dealer requests',
+            value: getStatVal('dealer_approvals', 0),
+            subText: 'Requires review',
+            icon: Handshake,
+            gradient: 'from-amber-500/10 to-orange-500/5',
+            border: 'border-amber-500/15',
+            iconBg: 'bg-amber-500/10 text-amber-600',
+            onClick: () => navigate('/admin/dealers')
           }
-        ].map((kpi, i) => {
-          const Icon = kpi.icon;
+        ].map((card) => {
+          const Icon = card.icon;
           return (
             <div
-              key={i}
-              className={`rounded-[22px] p-5.5 hover:shadow-[0_12px_24px_rgba(0,0,0,0.025)] hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between h-[190px] border border-transparent hover:border-slate-100 ${kpi.bgColor}`}
+              key={card.id}
+              onClick={card.onClick}
+              className={`bg-white rounded-[24px] p-6 border ${card.border} shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer group relative overflow-hidden`}
             >
-              {/* Top Row: Icon and Trend Badge */}
-              <div className="flex items-center justify-between">
-                <div className={`w-9.5 h-9.5 rounded-full flex items-center justify-center shadow-2xs ${kpi.iconColor}`}>
-                  <Icon className="w-4.5 h-4.5" />
+              <div className={`absolute top-0 right-0 w-32 h-32 rounded-bl-full bg-gradient-to-br ${card.gradient} opacity-50 pointer-events-none`} />
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{card.title}</span>
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${card.iconBg} group-hover:scale-110 transition-transform duration-200 shadow-xs`}>
+                  <Icon className="w-5 h-5" />
                 </div>
-                <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-0.5 leading-none ${kpi.trendColor}`}>
-                  {kpi.trend} {kpi.trendType === 'up' ? '↗' : '↘'}
-                </span>
               </div>
-
-              {/* Bottom Stack: Label, Value, Description */}
-              <div className="flex flex-col mt-3.5">
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-none">
-                  {kpi.title}
-                </span>
-                <h4 className="text-[29px] font-black text-slate-900 tracking-tight leading-none mt-2">
-                  {kpi.value}
-                </h4>
-                <span className="text-[11px] font-semibold text-slate-450 mt-1.5 leading-none">
-                  {kpi.desc}
-                </span>
+              <div className="space-y-1">
+                <p className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tight">{card.value}</p>
+                <p className="text-xs font-semibold text-slate-400">{card.subText}</p>
               </div>
             </div>
           );
@@ -523,7 +532,7 @@ const AdminDashboard: React.FC = () => {
               </div>
               <button 
                 onClick={() => navigate('/admin/orders')}
-                className="text-[11px] font-bold text-[#005F63] hover:text-[#0B7C80] flex items-center gap-0.5 bg-[#005F63]/[0.04] px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-[#005F63]/10"
+                className="text-[11px] font-bold text-[#005F63] hover:text-[#0B7C80] flex items-center gap-0.5 bg-[#005F63]/[0.04] px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-[#005F63]/10 cursor-pointer"
               >
                 View all <ArrowUpRight className="w-3.5 h-3.5" />
               </button>
@@ -541,37 +550,59 @@ const AdminDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {RECENT_ORDERS.map((ord, i) => (
-                    <tr key={i} className="hover:bg-slate-50/30 transition-all duration-150 text-xs font-semibold text-slate-650">
-                      <td className="py-3.5 px-4 text-slate-800 font-bold">{ord.id}</td>
-                      <td className="py-3.5 px-4 font-medium">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-[10px] border border-slate-200/40 shadow-2xs">
-                            {ord.avatar}
-                          </div>
-                          <span>{ord.customer}</span>
-                        </div>
+                  {loadingOrders ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-slate-400 text-xs font-semibold">
+                        Loading recent orders…
                       </td>
-                      <td className="py-3.5 px-4 text-right font-black text-slate-800">{ord.amount}</td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                          ord.status === 'Completed' ? 'bg-emerald-50 text-emerald-700' :
-                          ord.status === 'Processing' ? 'bg-amber-50 text-amber-700' :
-                          ord.status === 'Shipped' ? 'bg-blue-50 text-blue-700' :
-                          'bg-orange-50 text-orange-700'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${
-                            ord.status === 'Completed' ? 'bg-emerald-500' :
-                            ord.status === 'Processing' ? 'bg-amber-500' :
-                            ord.status === 'Shipped' ? 'bg-blue-500' :
-                            'bg-orange-500'
-                          }`} />
-                          {ord.status}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-400 font-medium">{ord.date}</td>
                     </tr>
-                  ))}
+                  ) : recentOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-slate-400 text-xs font-semibold">
+                        No orders found in system yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    recentOrders.map((ord) => {
+                      const statusInfo = formatOrderStatus(ord.status);
+                      const formattedDate = ord.created_at
+                        ? new Date(ord.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : '—';
+                      return (
+                        <tr
+                          key={ord.id}
+                          onClick={() => navigate(`/admin/orders/${ord.id}`)}
+                          className="hover:bg-slate-50/70 transition-all duration-150 text-xs font-semibold text-slate-650 cursor-pointer group"
+                        >
+                          <td className="py-3.5 px-4 text-[#005F63] font-bold font-mono group-hover:underline">
+                            {ord.order_number}
+                          </td>
+                          <td className="py-3.5 px-4 font-medium">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-[10px] border border-slate-200/40 shadow-2xs shrink-0">
+                                {getInitials(ord.customer_name)}
+                              </div>
+                              <span className="truncate max-w-[160px] text-slate-800 font-semibold">{ord.customer_name || 'Customer'}</span>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 text-right font-black text-slate-800">
+                            ₹{Number(ord.total_amount || 0).toLocaleString('en-IN')}
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${statusInfo.bg}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dot}`} />
+                              {statusInfo.label}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-400 font-medium">{formattedDate}</td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
