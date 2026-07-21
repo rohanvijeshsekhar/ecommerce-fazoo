@@ -110,8 +110,8 @@ class ProductPricingDealerSerializer(ProductPricingPublicSerializer):
 
 class ProductPricingInlineSerializer(serializers.ModelSerializer):
     """
-    Lightweight inline serializer embedded in ProductListSerializer.
-    Returns the minimum fields needed for product card rendering.
+    Inline pricing serializer embedded in ProductListSerializer.
+    Returns complete pricing details required for admin tables and product card rendering.
     """
 
     is_offer_active     = serializers.BooleanField(read_only=True)
@@ -120,5 +120,16 @@ class ProductPricingInlineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductPricing
-        fields = ["mrp", "selling_price", "offer_price", "is_offer_active", "effective_price", "discount_percentage"]
+        fields = [
+            "mrp",
+            "selling_price",
+            "offer_price",
+            "dealer_price",
+            "gst_percentage",
+            "offer_start_date",
+            "offer_end_date",
+            "is_offer_active",
+            "effective_price",
+            "discount_percentage",
+        ]
         read_only_fields = fields
