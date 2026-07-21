@@ -21,6 +21,7 @@ import WarrantyClaimDetailPage from './pages/WarrantyClaimDetailPage';
 import WarrantyRegistrationDetailPage from './pages/WarrantyRegistrationDetailPage';
 import SupportPage from './pages/SupportPage';
 import SupportDetailPage from './pages/SupportDetailPage';
+import FulfillmentPage from './pages/FulfillmentPage';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -52,6 +53,9 @@ const AdminRoutes: React.FC = () => (
         path="orders/new"
         element={<ComingSoon module="Create Order" description="Manually place an order on behalf of a customer." />}
       />
+
+      {/* Fulfillment — Phase 13 LIVE */}
+      <Route path="fulfillment" element={<FulfillmentPage />} />
 
       {/* Customers & Dealers — Phase 5C */}
       <Route path="customers" element={<CustomersPage />} />

@@ -23,7 +23,13 @@ import {
   ArrowRight,
   ArrowLeft,
   ChevronLeft,
-  X
+  X,
+  PackageX,
+  BellRing,
+  Bell,
+  Mail,
+  AlertTriangle,
+  CheckCircle2
 } from 'lucide-react';
 import { useGuestGuard } from '../hooks/useGuestGuard';
 import { useAuth } from '../hooks/useAuth';
@@ -245,6 +251,22 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [isStickyVisible, setIsStickyVisible] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
+  // Restock alert state (Flipkart / Myntra / Amazon style)
+  const [isRestockNotified, setIsRestockNotified] = useState(false);
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState(user?.email || '');
+
+  const handleNotifyMe = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!notifyEmail || !notifyEmail.includes('@')) {
+      if (showToast) showToast("Please enter a valid email address.");
+      return;
+    }
+    setIsRestockNotified(true);
+    setShowNotifyModal(false);
+    if (showToast) showToast(`Restock alert set! We will notify ${notifyEmail} when item is back in stock.`);
+  };
+
   // States for Gallery transitions & Fullscreen lightbox
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [swiperRef, setSwiperRef] = useState<any>(null);
@@ -413,7 +435,13 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     );
   }
 
+  const isOutOfStock = Boolean(
+    productData?.inventory &&
+    (productData.inventory.stock_status === 'out_of_stock' || productData.inventory.available_stock <= 0)
+  );
+
   const handleAddToCart = () => {
+    if (isOutOfStock) return;
     const itemId = productData ? productData.slug : 'nsk-handpiece';
     const itemName = productData ? productData.name : 'NSK Pana-Max High Speed Handpiece';
     const itemCat = productData ? (productData.category_detail?.name || 'Clinical Equipment') : 'Clinical Equipment';
@@ -453,6 +481,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   };
 
   const handleBuyNow = () => {
+    if (isOutOfStock) return;
     const itemId = productData ? productData.slug : 'nsk-handpiece';
     const itemName = productData ? productData.name : 'NSK Pana-Max High Speed Handpiece';
     const itemCat = productData ? (productData.category_detail?.name || 'Clinical Equipment') : 'Clinical Equipment';
@@ -710,6 +739,15 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     />
                   </button>
                 </div>
+
+                {/* Out of Stock Image Badge (Flipkart/Amazon style) */}
+                {isOutOfStock && (
+                  <div className="absolute top-3.5 left-3.5 z-30 bg-slate-950/85 text-white backdrop-blur-md px-3 py-1 rounded-full text-[9.5px] font-black uppercase tracking-widest shadow-md flex items-center gap-1.5 border border-white/20">
+                    <PackageX className="w-3.5 h-3.5 text-rose-400" />
+                    Currently Unavailable
+                  </div>
+                )}
+
                 <Swiper
                   modules={[Pagination]}
                   onSwiper={setSwiperRef}
@@ -928,46 +966,81 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               </div>
             </div>
 
-            {/* Purchase CTA buttons */}
-            <div className="space-y-1.5 mb-3.5">
-              <div className="flex gap-2">
+            {/* Purchase CTA buttons / Out of Stock Banner */}
+            {isOutOfStock ? (
+              <div className="space-y-3 mb-4 select-none">
+                {/* Flipkart / Myntra style Out of Stock Notice Card */}
+                <div className="bg-gradient-to-r from-rose-50/90 via-amber-50/50 to-rose-50/90 border border-rose-200/80 rounded-2xl p-4 shadow-xs text-left">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-7 h-7 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                      <AlertTriangle className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-rose-900 uppercase tracking-wide font-display">Currently Out of Stock</h4>
+                      <p className="text-[10.5px] text-slate-500 font-medium">Temporarily unavailable from manufacturer</p>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-600 font-sans leading-relaxed mt-2 pl-0.5">
+                    We're working closely with suppliers to restock this item. Subscribe below to get an instant notification as soon as inventory arrives.
+                  </p>
+                </div>
 
-                {/* Quantity selector */}
-                <div className="flex items-center border border-slate-200 rounded-lg px-1 bg-white shrink-0 h-10">
+                {/* Flipkart / Myntra style "NOTIFY ME" Button */}
+                {isRestockNotified ? (
+                  <div className="w-full py-3 px-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-xs font-extrabold flex items-center justify-center gap-2 shadow-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    Restock Alert Active — We'll email {notifyEmail || 'you'} when back in stock!
+                  </div>
+                ) : (
                   <button
-                    onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-                    className="w-6 h-6 text-slate-400 hover:text-slate-700 flex items-center justify-center cursor-pointer font-bold"
+                    onClick={() => setShowNotifyModal(true)}
+                    className="w-full h-11 rounded-xl bg-[#006670] hover:bg-[#004e56] text-white text-xs tracking-wider font-extrabold uppercase transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Minus className="w-3 h-3" />
+                    <BellRing className="w-4 h-4 animate-bounce" />
+                    Notify Me When Available
                   </button>
-                  <span className="w-5 text-center text-xs font-bold text-slate-800 font-sans">{quantity}</span>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-1.5 mb-3.5">
+                <div className="flex gap-2">
+                  {/* Quantity selector */}
+                  <div className="flex items-center border border-slate-200 rounded-lg px-1 bg-white shrink-0 h-10">
+                    <button
+                      onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                      className="w-6 h-6 text-slate-400 hover:text-slate-700 flex items-center justify-center cursor-pointer font-bold"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <span className="w-5 text-center text-xs font-bold text-slate-800 font-sans">{quantity}</span>
+                    <button
+                      onClick={() => setQuantity(prev => prev + 1)}
+                      className="w-6 h-6 text-slate-400 hover:text-slate-700 flex items-center justify-center cursor-pointer font-bold"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  {/* Add to Cart button */}
                   <button
-                    onClick={() => setQuantity(prev => prev + 1)}
-                    className="w-6 h-6 text-slate-400 hover:text-slate-700 flex items-center justify-center cursor-pointer font-bold"
+                    id="main-add-to-cart-btn"
+                    onClick={handleAddToCart}
+                    className="flex-grow h-10 rounded-lg bg-white hover:bg-slate-50 text-[#006670] border border-[#006670]/20 hover:border-[#006670] text-xs tracking-wider font-extrabold uppercase transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                   >
-                    <Plus className="w-3 h-3" />
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                    Add to Cart
                   </button>
                 </div>
 
-                {/* Add to Cart button */}
+                {/* Buy Now button */}
                 <button
-                  id="main-add-to-cart-btn"
-                  onClick={handleAddToCart}
-                  className="flex-grow h-10 rounded-lg bg-white hover:bg-slate-50 text-[#006670] border border-[#006670]/20 hover:border-[#006670] text-xs tracking-wider font-extrabold uppercase transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                  onClick={handleBuyNow}
+                  className="w-full h-10 rounded-lg bg-[#006670] hover:bg-[#004e56] text-white text-xs tracking-wider font-extrabold uppercase transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <ShoppingCart className="w-3.5 h-3.5" />
-                  Add to Cart
+                  Buy Now
                 </button>
               </div>
-
-              {/* Buy Now button */}
-              <button
-                onClick={handleBuyNow}
-                className="w-full h-10 rounded-lg bg-[#006670] hover:bg-[#004e56] text-white text-xs tracking-wider font-extrabold uppercase transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer"
-              >
-                Buy Now
-              </button>
-            </div>
+            )}
 
             {/* Wishlist & Share link */}
             <div className="flex gap-4 text-[10px] font-bold text-slate-400 mb-3.5 border-b border-slate-100/60 pb-3.5">
@@ -1565,32 +1638,96 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               )}
             </div>
 
-            {/* Quantity select */}
-            <div className="flex items-center border border-slate-200 rounded-xl px-1.5 py-0.5 bg-white shrink-0">
+            {isOutOfStock ? (
               <button
-                onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-                className="w-6 h-6 text-slate-400 hover:text-slate-700 flex items-center justify-center cursor-pointer font-bold text-xs"
+                onClick={() => setShowNotifyModal(true)}
+                className="w-full md:w-auto px-5 py-2.5 rounded-xl bg-[#006670] hover:bg-[#004e56] text-white text-xs font-extrabold uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
               >
-                -
+                <BellRing className="w-4 h-4" />
+                {isRestockNotified ? 'Restock Alert Active ✓' : 'Notify Me When Available'}
               </button>
-              <span className="w-5 text-center text-xs font-bold text-slate-800 font-sans">{quantity}</span>
-              <button onClick={() => setQuantity(prev => prev + 1)} className="w-6 h-6 text-slate-400 hover:text-slate-700 flex items-center justify-center cursor-pointer font-bold text-xs">+</button>
-            </div>
-            <button
-              onClick={handleAddToCart}
-              className="flex-1 md:flex-initial px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-[#006670] border border-[#006670]/20 hover:border-[#006670] text-xs font-bold transition-all shadow-sm cursor-pointer whitespace-nowrap text-center"
-            >
-              Add to Cart
-            </button>
-            <button
-              onClick={handleBuyNow}
-              className="flex-1 md:flex-initial px-4 py-2 rounded-xl bg-[#006670] hover:bg-[#004e56] text-white text-xs font-bold transition-all shadow-sm hover:shadow-md cursor-pointer whitespace-nowrap text-center"
-            >
-              Buy Now
-            </button>
+            ) : (
+              <>
+                {/* Quantity select */}
+                <div className="flex items-center border border-slate-200 rounded-xl px-1.5 py-0.5 bg-white shrink-0">
+                  <button
+                    onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                    className="w-6 h-6 text-slate-400 hover:text-slate-700 flex items-center justify-center cursor-pointer font-bold text-xs"
+                  >
+                    -
+                  </button>
+                  <span className="w-5 text-center text-xs font-bold text-slate-800 font-sans">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(prev => prev + 1)}
+                    className="w-6 h-6 text-slate-400 hover:text-slate-700 flex items-center justify-center cursor-pointer font-bold text-xs"
+                  >
+                    +
+                  </button>
+                </div>
+                <button
+                  onClick={handleAddToCart}
+                  className="flex-1 md:flex-initial px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-[#006670] border border-[#006670]/20 hover:border-[#006670] text-xs font-bold transition-all shadow-sm cursor-pointer whitespace-nowrap text-center"
+                >
+                  Add to Cart
+                </button>
+                <button
+                  onClick={handleBuyNow}
+                  className="flex-1 md:flex-initial px-4 py-2 rounded-xl bg-[#006670] hover:bg-[#004e56] text-white text-xs font-bold transition-all shadow-sm hover:shadow-md cursor-pointer whitespace-nowrap text-center"
+                >
+                  Buy Now
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Restock Notification Modal (Flipkart / Myntra / Amazon style) */}
+      {showNotifyModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-left relative animate-scaleUp">
+            <button
+              onClick={() => setShowNotifyModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-12 h-12 rounded-2xl bg-[#e6f3f5] text-[#006670] flex items-center justify-center mb-4">
+              <BellRing className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-lg font-black text-slate-900 tracking-tight font-display mb-1">
+              Get Restock Alert
+            </h3>
+            <p className="text-xs text-slate-500 font-medium leading-relaxed mb-4">
+              Enter your email address to receive an automated notification as soon as <strong>{productData?.name || 'this product'}</strong> is back in stock.
+            </p>
+
+            <form onSubmit={handleNotifyMe} className="space-y-3">
+              <div className="relative">
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="email"
+                  value={notifyEmail}
+                  onChange={(e) => setNotifyEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#006670] focus:bg-white transition-all"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-[#006670] hover:bg-[#004e56] text-white rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Bell className="w-4 h-4" />
+                Subscribe to Restock Alert
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {isFullscreenOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center animate-fadeIn select-none" onClick={() => { setIsFullscreenOpen(false); setZoomLevel(1); setPanOffset({ x: 0, y: 0 }); }}>

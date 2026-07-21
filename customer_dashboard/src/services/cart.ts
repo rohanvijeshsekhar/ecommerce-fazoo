@@ -56,6 +56,12 @@ export interface Address {
 
 export interface OrderSuccessData {
   id: string;
+  // Real order identifiers (populated by verifyPayment backend)
+  order_number?: string;
+  invoice_number?: string;
+  created_at?: string;
+  estimated_delivery_date?: string | null;
+  razorpay_payment_id?: string;
   items: Array<{
     id: string;
     name: string;

@@ -59,6 +59,9 @@ export interface OrderDetail {
   notes: string | null;
   cancellation_reason: string | null;
   cancelled_at: string | null;
+  packed_at: string | null;
+  shipped_at: string | null;
+  delivered_at: string | null;
 }
 
 export const ordersService = {

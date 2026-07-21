@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Package, Tag, Award, Layers, DollarSign,
   ShoppingCart, Users, Handshake, Shield, HeadphonesIcon,
   BarChart3, Bell, UserCog, ClipboardList, Settings,
-  ChevronLeft, ChevronRight, X, LayoutTemplate, Sparkles, LogOut
+  ChevronLeft, ChevronRight, X, LayoutTemplate, Sparkles, LogOut, Truck
 } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
 import { useAuth } from '../../hooks/useAuth';
@@ -35,9 +35,10 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Operations',
     items: [
-      { id: 'inventory',  label: 'Inventory',     icon: 'Layers',           path: '/admin/inventory'  },
-      { id: 'pricing',    label: 'Pricing',        icon: 'DollarSign',       path: '/admin/pricing'    },
-      { id: 'orders',     label: 'Orders',         icon: 'ShoppingCart',     path: '/admin/orders',    badgeVariant: 'danger' },
+      { id: 'inventory',    label: 'Inventory',     icon: 'Layers',      path: '/admin/inventory'    },
+      { id: 'pricing',      label: 'Pricing',        icon: 'DollarSign',  path: '/admin/pricing'      },
+      { id: 'orders',       label: 'Orders',         icon: 'ShoppingCart',path: '/admin/orders',       badgeVariant: 'danger'  },
+      { id: 'fulfillment',  label: 'Fulfillment',    icon: 'Truck',       path: '/admin/fulfillment'  },
     ],
   },
   {
@@ -75,7 +76,7 @@ const NAV_GROUPS: NavGroup[] = [
 const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   LayoutDashboard, Package, Tag, Award, Layers, DollarSign,
   ShoppingCart, Users, Handshake, Shield, HeadphonesIcon,
-  BarChart3, Bell, UserCog, ClipboardList, Settings, LayoutTemplate, Sparkles,
+  BarChart3, Bell, UserCog, ClipboardList, Settings, LayoutTemplate, Sparkles, Truck,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,7 +87,8 @@ const AdminSidebar: React.FC = () => {
   const { isSidebarCollapsed, toggleSidebar, isMobileSidebarOpen, setMobileSidebarOpen, adminRole } = useAdmin();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, adminUser, logout } = useAuth();
+  const activeAdmin = adminUser || user;
   const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null);
 
   const isActive = (path: string) => {
@@ -99,11 +101,11 @@ const AdminSidebar: React.FC = () => {
     navigate('/admin/login');
   };
 
-  const userInitials = user
-    ? (user.full_name?.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)) || user.email?.[0]?.toUpperCase() || 'A'
+  const userInitials = activeAdmin
+    ? (activeAdmin.full_name?.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)) || activeAdmin.email?.[0]?.toUpperCase() || 'A'
     : 'A';
 
-  const userName = user ? user.full_name?.trim() || user.email : 'Admin User';
+  const userName = activeAdmin ? activeAdmin.full_name?.trim() || activeAdmin.email : 'Admin User';
 
   const NavItem = ({ item }: { item: NavGroup['items'][0] }) => {
     const Icon = ICON_MAP[item.icon];

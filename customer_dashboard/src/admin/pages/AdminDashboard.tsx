@@ -83,7 +83,8 @@ const RECENT_ACTIVITIES = [
 const AdminDashboard: React.FC = () => {
   useBreadcrumbSync([{ label: 'Dashboard' }]);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, adminUser } = useAuth();
+  const activeAdmin = adminUser || user;
 
   const [stats, setStats] = useState<DashboardStat[]>([]);
   const [timeStr, setTimeStr] = useState('');

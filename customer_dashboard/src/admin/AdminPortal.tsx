@@ -16,19 +16,22 @@ import LoadingOverlay from './components/LoadingOverlay';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const AdminPortal: React.FC = () => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isAdminAuthenticated, isLoading, user, adminUser } = useAuth();
+
+  const activeAdmin = adminUser || (user?.role === 'admin' ? user : null);
+  const isAuth = isAdminAuthenticated || (isAuthenticated && activeAdmin !== null);
 
   if (isLoading) {
     return <LoadingOverlay message="Initialising FAAZO Admin…" />;
   }
 
   // Not logged in → go to admin login
-  if (!isAuthenticated) {
+  if (!isAuth || !activeAdmin) {
     return <AdminLogin />;
   }
 
   // Logged in but not admin role → show access denied (AdminLogin renders it)
-  if (user?.role !== 'admin') {
+  if (activeAdmin.role !== 'admin') {
     return <AdminLogin />;
   }
 

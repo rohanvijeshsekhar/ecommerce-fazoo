@@ -43,6 +43,8 @@ interface ProfileDashboardProps {
   setCurrentView: (view: 'home' | 'portfolio' | 'listing' | 'detail' | 'cart' | 'wishlist' | 'checkout' | 'order-success' | 'my-orders' | 'profile') => void;
   onProductClick: (id: string) => void;
   showToast: (message: string) => void;
+  /** When set, automatically opens this order's detail view on mount */
+  initialOrderId?: string | null;
 }
 
 
@@ -147,6 +149,7 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({
   setCurrentView,
   onProductClick,
   showToast,
+  initialOrderId,
 }) => {
   const { user, profile, logout, refreshUser, resendVerification } = useAuth();
 
@@ -327,6 +330,15 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({
   const [ordersPage, setOrdersPage] = useState(1);
   const [ordersTotal, setOrdersTotal] = useState(0);
   const ordersPageSize = 10;
+
+  // Auto-open order from success page navigation
+  useEffect(() => {
+    if (initialOrderId) {
+      setSelectedOrderId(initialOrderId);
+      setActiveSection('orders');
+    }
+  }, [initialOrderId, setActiveSection]);
+
 
   const fetchUserOrders = useCallback(async () => {
     setOrdersLoading(true);
@@ -616,7 +628,7 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({
     { id: 'security', label: 'Security', icon: <Lock className="w-4 h-4" />, group: 'settings' },
   ];
 
-  const displayName = profile?.full_name || user?.full_name || 'Doctor';
+  const displayName = user?.full_name || profile?.full_name || 'Doctor';
   const displayInitials = avatarInitials(displayName);
 
   // ─── SECTIONS ─────────────────────────────────────────────────────────────

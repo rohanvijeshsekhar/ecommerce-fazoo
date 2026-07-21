@@ -74,6 +74,8 @@ LOCAL_APPS = [
     "apps.notifications",
     "apps.support",
     "apps.warranty",
+    # ── Phase 13: Shipping & Fulfillment ─────────────────────
+    "apps.shipping",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -461,3 +463,23 @@ APP_VERSION = "1.0.0"
 RAZORPAY_KEY_ID = env("RAZORPAY_KEY_ID", default="")
 RAZORPAY_KEY_SECRET = env("RAZORPAY_KEY_SECRET", default="")
 RAZORPAY_WEBHOOK_SECRET = env("RAZORPAY_WEBHOOK_SECRET", default="")
+
+
+# ============================================================
+# Delhivery Shipping Integration & Provider Settings
+# ============================================================
+# SHIPPING_PROVIDER options: 'offline' | 'sandbox' | 'live'
+SHIPPING_PROVIDER = env("SHIPPING_PROVIDER", default="offline").lower()
+DELHIVERY_BASE_URL_SANDBOX = env("DELHIVERY_BASE_URL_SANDBOX", default="https://staging-express.delhivery.com")
+DELHIVERY_BASE_URL_LIVE = env("DELHIVERY_BASE_URL_LIVE", default="https://express.delhivery.com")
+DELHIVERY_API_TOKEN = env("DELHIVERY_API_TOKEN", default=env("DELHIVERY_TOKEN", default=""))
+DELHIVERY_CLIENT_NAME = env("DELHIVERY_CLIENT_NAME", default="FAAZO")
+DELHIVERY_PICKUP_LOCATION = env("DELHIVERY_PICKUP_LOCATION", default="FAAZO Central Warehouse")
+DELHIVERY_SELLER_NAME = env("DELHIVERY_SELLER_NAME", default="FAAZO Dental Solutions Pvt. Ltd.")
+DELHIVERY_PHONE = env("DELHIVERY_PHONE", default="9876543210")
+DELHIVERY_EMAIL = env("DELHIVERY_EMAIL", default="operations@faazo.com")
+
+# Legacy aliases for backward compatibility
+DELHIVERY_TOKEN = DELHIVERY_API_TOKEN
+DELHIVERY_SANDBOX = (SHIPPING_PROVIDER != "live")
+DELHIVERY_REGISTERED_NAME = DELHIVERY_SELLER_NAME

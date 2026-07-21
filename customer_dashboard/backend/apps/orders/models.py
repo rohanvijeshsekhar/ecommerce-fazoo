@@ -145,15 +145,35 @@ class Order(BaseModel):
         return f"Order {self.order_number or self.id} - {self.status}"
 
     def save(self, *args, **kwargs):
-        # Auto-generate order number and invoice number
+        # Auto-generate unique order_number and invoice_number
         is_new = self._state.adding
         if is_new or not self.order_number:
             now = timezone.now()
-            date_str = now.strftime("%Y%m")
-            # Count the orders created today/this month for simple suffix
-            count = Order.objects.filter(created_at__year=now.year, created_at__month=now.month).count() + 1
-            self.order_number = f"FAAZO-{date_str}-{count:04d}"
+            date_prefix = f"FAAZO-{now.strftime('%Y%m')}-"
             
+            # Find all existing order numbers with the current year-month prefix
+            existing_numbers = Order.objects.filter(
+                order_number__startswith=date_prefix
+            ).values_list("order_number", flat=True)
+
+            max_seq = 0
+            for num_str in existing_numbers:
+                if num_str and num_str.startswith(date_prefix):
+                    parts = num_str.split("-")
+                    if len(parts) >= 3 and parts[-1].isdigit():
+                        seq = int(parts[-1])
+                        if seq > max_seq:
+                            max_seq = seq
+
+            next_seq = max_seq + 1
+            candidate = f"{date_prefix}{next_seq:04d}"
+            # Safety loop to guarantee uniqueness against any race conditions
+            while Order.objects.filter(order_number=candidate).exists():
+                next_seq += 1
+                candidate = f"{date_prefix}{next_seq:04d}"
+
+            self.order_number = candidate
+
         if not self.invoice_number:
             self.invoice_number = f"INV-{self.order_number}"
 

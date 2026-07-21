@@ -58,7 +58,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "status_history", "razorpay_payment_id", "razorpay_order_id",
             "payment_status", "customer_email", "customer_name",
             "estimated_delivery_date", "tracking_number", "shipping_carrier",
-            "notes", "cancellation_reason", "cancelled_at"
+            "notes", "cancellation_reason", "cancelled_at",
+            "packed_at", "shipped_at", "delivered_at"
         ]
 
     def get_razorpay_payment_id(self, obj) -> str:

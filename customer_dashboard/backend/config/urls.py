@@ -82,6 +82,8 @@ urlpatterns = [
                 path("support/", include("apps.support.urls")),
                 # Phase 13+ – Notifications
                 path("notifications/", include("apps.notifications.urls")),
+                # Phase 13+ – Shipping & Fulfillment
+                path("", include("apps.shipping.urls")),
             ]
         ),
     ),

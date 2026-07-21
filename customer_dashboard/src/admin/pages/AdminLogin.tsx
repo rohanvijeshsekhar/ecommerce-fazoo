@@ -11,10 +11,11 @@ import { useAuth } from '../../hooks/useAuth';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const AdminLogin: React.FC = () => {
-  const { login, isAuthenticated, user, isLoading: authLoading, logout } = useAuth();
+  const { login, isAuthenticated, isAdminAuthenticated, user, adminUser, isLoading: authLoading, logout } = useAuth();
+  const activeAdmin = adminUser || (user?.role === 'admin' ? user : null);
 
-  const [email, setEmail] = useState('faazo');
-  const [password, setPassword] = useState('faazo123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,12 +24,12 @@ const AdminLogin: React.FC = () => {
 
   // If already authenticated on page load (e.g. returning user) → redirect or show login form
   useEffect(() => {
-    if (!authLoading && isAuthenticated && user) {
-      if (user.role === 'admin') {
+    if (!authLoading && (isAdminAuthenticated || activeAdmin)) {
+      if (activeAdmin?.role === 'admin') {
         window.location.replace('/admin');
       }
     }
-  }, [isAuthenticated, user, authLoading]);
+  }, [isAdminAuthenticated, activeAdmin, authLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

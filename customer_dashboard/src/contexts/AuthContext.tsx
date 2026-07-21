@@ -10,8 +10,10 @@ import type { PendingAction } from '../types/pendingAction';
 
 export interface AuthContextType {
   user: UserMinimal | null;
+  adminUser: UserMinimal | null;
   profile: UserProfile | null;
   isAuthenticated: boolean;
+  isAdminAuthenticated: boolean;
   isLoading: boolean;
   pendingAction: PendingAction | null;
   setPendingAction: (action: PendingAction | null) => void;
@@ -31,6 +33,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+
+  // Derive separated customer vs admin users
+  const customerUser = user && user.role !== 'admin' ? user : null;
+  const adminUser = user && user.role === 'admin' ? user : null;
 
   // Initialize: attempt to load user profile on mount if we have a refresh token
   useEffect(() => {
@@ -54,10 +60,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setUser(userRes.data);
             localStorage.setItem('faazo_user', JSON.stringify(userRes.data));
 
-            // Fetch profile
-            const profileRes = await usersService.getProfile();
-            if (profileRes.success && profileRes.data) {
-              setProfile(profileRes.data);
+            // Fetch profile only for customer/dealer accounts
+            if (userRes.data.role !== 'admin') {
+              const profileRes = await usersService.getProfile();
+              if (profileRes.success && profileRes.data) {
+                setProfile(profileRes.data);
+              }
+            } else {
+              setProfile(null);
             }
           }
         } catch (error) {
@@ -131,16 +141,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setAccessToken(data.access);
     localStorage.setItem('faazo_refresh_token', data.refresh);
     setUser(data.user);
+    setProfile(null);
     localStorage.setItem('faazo_user', JSON.stringify(data.user));
 
-    // Fetch profile
-    try {
-      const profileRes = await usersService.getProfile();
-      if (profileRes.success && profileRes.data) {
-        setProfile(profileRes.data);
+    // Fetch profile only for non-admin accounts
+    if (data.user.role !== 'admin') {
+      try {
+        const profileRes = await usersService.getProfile();
+        if (profileRes.success && profileRes.data) {
+          setProfile(profileRes.data);
+        }
+      } catch (e) {
+        console.error('Failed to load profile after authentication:', e);
       }
-    } catch (e) {
-      console.error('Failed to load profile after authentication:', e);
     }
   };
 
@@ -194,9 +207,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(userRes.data);
         localStorage.setItem('faazo_user', JSON.stringify(userRes.data));
       }
-      const profileRes = await usersService.getProfile();
-      if (profileRes.success && profileRes.data) {
-        setProfile(profileRes.data);
+      if (userRes.data && userRes.data.role !== 'admin') {
+        const profileRes = await usersService.getProfile();
+        if (profileRes.success && profileRes.data) {
+          setProfile(profileRes.data);
+        }
       }
     } catch (e) {
       console.error('Failed to refresh user:', e);
@@ -229,9 +244,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   return (
     <AuthContext.Provider
       value={{
-        user,
-        profile,
-        isAuthenticated: !!user,
+        user: customerUser,
+        adminUser,
+        profile: (profile && customerUser && profile.email === customerUser.email) ? profile : null,
+        isAuthenticated: !!customerUser,
+        isAdminAuthenticated: !!adminUser,
         isLoading,
         pendingAction,
         setPendingAction,

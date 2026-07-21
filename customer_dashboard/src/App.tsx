@@ -257,29 +257,10 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  const [completedOrderData, setCompletedOrderData] = useState<{
-    id: string;
-    items: CartItem[];
-    address: {
-      id: string;
-      type: string;
-      dentist: string;
-      clinic: string;
-      street: string;
-      city: string;
-      pincode: string;
-      phone: string;
-    };
-    paymentMethod: string;
-    pricing: {
-      subtotal: number;
-      shipping: number;
-      gst: number;
-      discount: number;
-      total: number;
-      savings: number;
-    };
-  } | null>(null);
+  // Use the full OrderSuccessData type (includes real order_number, invoice_number, etc.)
+  const [completedOrderData, setCompletedOrderData] = useState<import('./services/cart').OrderSuccessData | null>(null);
+  // Track the real backend order ID for post-success navigation
+  const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
 
   const [_activeTrackingOrderId, setActiveTrackingOrderId] = useState<string | null>(null);
 
@@ -650,6 +631,18 @@ function App() {
             orderData={completedOrderData}
             setCurrentView={setCurrentView}
             setActiveTrackingOrderId={setActiveTrackingOrderId}
+            onViewOrder={(orderId) => {
+              // Navigate to ProfileDashboard and open the specific order
+              setDashboardSection('orders');
+              setSuccessOrderId(orderId);
+              setCurrentView('my-orders');
+              window.scrollTo(0, 0);
+            }}
+            onContactSupport={(_orderId) => {
+              setDashboardSection('support');
+              setCurrentView('my-orders');
+              window.scrollTo(0, 0);
+            }}
           />
         ) : currentView === 'dealer-portal' ? (
           <DealerPortalPage
@@ -668,6 +661,7 @@ function App() {
             setCurrentView={setCurrentView}
             onProductClick={handleProductClick}
             showToast={showToast}
+            initialOrderId={successOrderId}
           />
         ) : (
           <>

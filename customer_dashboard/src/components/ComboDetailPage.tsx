@@ -516,19 +516,26 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
                   id="combo-add-to-cart-btn"
                   onClick={handleAddToCart}
                   disabled={combo.inventory <= 0}
-                  className="flex-grow h-10 rounded-lg bg-white hover:bg-slate-50 text-[#006670] border border-[#006670]/20 hover:border-[#006670] text-xs tracking-wider font-extrabold uppercase transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`flex-grow h-10 rounded-lg text-xs tracking-wider font-extrabold uppercase transition-all flex items-center justify-center gap-2 shadow-sm ${
+                    combo.inventory <= 0
+                      ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                      : 'bg-white hover:bg-slate-50 text-[#006670] border border-[#006670]/20 hover:border-[#006670] cursor-pointer'
+                  }`}
                 >
-                  <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
+                  <ShoppingCart className="w-3.5 h-3.5" />
+                  {combo.inventory <= 0 ? 'Out of Stock' : 'Add to Cart'}
                 </button>
               </div>
-              {/* Buy Now */}
-              <button
-                onClick={handleBuyNow}
-                disabled={combo.inventory <= 0}
-                className="w-full h-10 rounded-lg bg-[#006670] hover:bg-[#004e56] text-white text-xs tracking-wider font-extrabold uppercase transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Buy Combo Pack Now
-              </button>
+
+              {/* Buy Now — REMOVED completely when Out of Stock */}
+              {combo.inventory > 0 && (
+                <button
+                  onClick={handleBuyNow}
+                  className="w-full h-10 rounded-lg bg-[#006670] hover:bg-[#004e56] text-white text-xs tracking-wider font-extrabold uppercase transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  Buy Combo Pack Now
+                </button>
+              )}
             </div>
 
             {/* Wishlist & Share links */}
