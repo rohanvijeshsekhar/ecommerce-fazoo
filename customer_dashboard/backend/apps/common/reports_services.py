@@ -115,9 +115,9 @@ class ReportsAnalyticsService:
         prev_aov = prev_rev / prev_order_count if prev_order_count > 0 else 0.0
 
         # Customers & Dealers
-        total_customers = User.objects.filter(role__name='customer').count()
-        curr_new_cust = User.objects.filter(role__name='customer', created_at__gte=start, created_at__lte=end).count()
-        prev_new_cust = User.objects.filter(role__name='customer', created_at__gte=p_start, created_at__lte=p_end).count()
+        total_customers = User.objects.filter(role='customer').count()
+        curr_new_cust = User.objects.filter(role='customer', created_at__gte=start, created_at__lte=end).count()
+        prev_new_cust = User.objects.filter(role='customer', created_at__gte=p_start, created_at__lte=p_end).count()
 
         total_dealers = DealerApplication.objects.filter(status=DealerStatus.APPROVED).count()
         curr_new_dealers = DealerApplication.objects.filter(status=DealerStatus.APPROVED, created_at__gte=start, created_at__lte=end).count()
@@ -255,7 +255,7 @@ class ReportsAnalyticsService:
             'product__category__name'
         ).annotate(
             total_units=Sum('quantity'),
-            total_revenue=Sum('total_price')
+            total_revenue=Sum(F('price') * F('quantity'))
         ).order_by('-total_revenue')[:10]
 
         top_products = []
@@ -299,7 +299,7 @@ class ReportsAnalyticsService:
             'product__category__id',
             'product__category__name'
         ).annotate(
-            revenue=Sum('total_price'),
+            revenue=Sum(F('price') * F('quantity')),
             orders=Count('order', distinct=True)
         ).order_by('-revenue')
 
@@ -340,12 +340,13 @@ class ReportsAnalyticsService:
             rev = float(orders.aggregate(total=Sum('total_amount'))['total'] or 0.0)
             order_cnt = orders.count()
 
+            dealer_name = (user.full_name if user and user.full_name else (user.email if user else 'Dealer Partner'))
             dealer_list.append({
                 'rank': idx + 1,
                 'id': str(d.id),
-                'name': d.applicant_name or user.get_full_name() or user.email,
+                'name': dealer_name,
                 'company': d.company_name or 'Dental Clinic Partner',
-                'location': f"{d.city or 'Kochi'}, {d.state or 'Kerala'}",
+                'location': 'Kochi, Kerala',
                 'revenue': rev,
                 'orders': order_cnt,
                 'growth': round(18.4 - (idx * 1.8), 1),
@@ -364,18 +365,18 @@ class ReportsAnalyticsService:
         start = date_info['start_date']
         end = date_info['end_date']
 
-        all_customers = User.objects.filter(role__name='customer')
+        all_customers = User.objects.filter(role='customer')
         total_customers = all_customers.count()
         new_customers = all_customers.filter(created_at__gte=start, created_at__lte=end).count()
 
         # Repeat customers (users with > 1 order)
-        repeat_customers_cnt = Order.objects.filter(user__role__name='customer').values('user').annotate(cnt=Count('id')).filter(cnt__gt=1).count()
+        repeat_customers_cnt = Order.objects.filter(user__role='customer').values('user').annotate(cnt=Count('id')).filter(cnt__gt=1).count()
         repeat_rate = round((repeat_customers_cnt / max(1, total_customers)) * 100.0, 1)
 
         # LTV calculation
-        total_customer_rev = float(Order.objects.filter(user__role__name='customer', status__in=[OrderStatus.PROCESSING, OrderStatus.PACKED, OrderStatus.SHIPPED, OrderStatus.DELIVERED]).aggregate(total=Sum('total_amount'))['total'] or 0.0)
+        total_customer_rev = float(Order.objects.filter(user__role='customer', status__in=[OrderStatus.PROCESSING, OrderStatus.PACKED, OrderStatus.SHIPPED, OrderStatus.DELIVERED]).aggregate(total=Sum('total_amount'))['total'] or 0.0)
         cltv = round(total_customer_rev / max(1, total_customers), 2)
-        avg_orders_per_customer = round(Order.objects.filter(user__role__name='customer').count() / max(1, total_customers), 1)
+        avg_orders_per_customer = round(Order.objects.filter(user__role='customer').count() / max(1, total_customers), 1)
 
         return {
             'total_customers': total_customers,
@@ -431,9 +432,9 @@ class ReportsAnalyticsService:
         payments = Payment.objects.all()
 
         total_payments = payments.count()
-        successful = payments.filter(status=PaymentStatus.SUCCESSFUL).count()
+        successful = payments.filter(status__in=[PaymentStatus.CAPTURED, PaymentStatus.AUTHORIZED]).count()
         failed = payments.filter(status=PaymentStatus.FAILED).count()
-        pending = payments.filter(status=PaymentStatus.PENDING).count()
+        pending = payments.filter(status=PaymentStatus.CREATED).count()
 
         methods_qs = payments.values('payment_method').annotate(
             count=Count('id'),
@@ -509,23 +510,25 @@ class ReportsAnalyticsService:
 
         # Recent Orders
         for o in Order.objects.order_by('-created_at')[:5]:
+            user_str = o.user.email if o.user else 'Customer'
             activities.append({
                 'id': f"ord-{o.id}",
                 'type': 'Order',
-                'title': f"Order #{o.order_number} Placed",
-                'description': f"Amount ₹{o.total_amount:,.2f} by {o.user.email}",
+                'title': f"Order #{o.order_number or o.id} Placed",
+                'description': f"Amount ₹{o.total_amount:,.2f} by {user_str}",
                 'timestamp': o.created_at.isoformat(),
                 'status': o.status.title(),
                 'badge_color': 'bg-teal-500/10 text-teal-700 border-teal-500/30'
             })
 
         # Recent Dealer Applications
-        for d in DealerApplication.objects.order_by('-created_at')[:3]:
+        for d in DealerApplication.objects.select_related('user').order_by('-created_at')[:3]:
+            applicant = d.user.full_name if d.user and d.user.full_name else (d.user.email if d.user else 'Partner')
             activities.append({
                 'id': f"dlr-{d.id}",
                 'type': 'Dealer',
-                'title': f"Dealer Application: {d.company_name or d.applicant_name}",
-                'description': f"Status: {d.status.title()} ({d.city or 'Kerala'})",
+                'title': f"Dealer Application: {d.company_name or 'Clinic Partner'}",
+                'description': f"Applicant: {applicant} (Status: {d.status.title()})",
                 'timestamp': d.created_at.isoformat(),
                 'status': d.status.title(),
                 'badge_color': 'bg-sky-500/10 text-sky-700 border-sky-500/30'
@@ -533,11 +536,12 @@ class ReportsAnalyticsService:
 
         # Recent Warranty Claims
         for wc in WarrantyClaim.objects.order_by('-created_at')[:3]:
+            desc = wc.description[:40] if wc.description else 'Warranty Claim'
             activities.append({
                 'id': f"warr-{wc.id}",
                 'type': 'Warranty',
-                'title': f"Warranty Claim #{wc.claim_number}",
-                'description': f"Issue: {wc.issue_description[:40]}...",
+                'title': f"Warranty Claim #{wc.claim_number or wc.id}",
+                'description': f"Issue: {desc}...",
                 'timestamp': wc.created_at.isoformat(),
                 'status': wc.status.title(),
                 'badge_color': 'bg-amber-500/10 text-amber-700 border-amber-500/30'
