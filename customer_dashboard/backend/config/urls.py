@@ -54,6 +54,8 @@ urlpatterns = [
                 path("", include("apps.common.urls")),
                 # Admin Dashboard Analytics
                 path("admin/dashboard/", include("apps.common.dashboard_urls")),
+                # Admin Enterprise Reports & Business Intelligence
+                path("admin/reports/", include("apps.common.reports_urls")),
                 # Phase 3 – Authentication
                 path("auth/", include("apps.authentication.urls")),
                 # Phase 3 – Users (Profile + Addresses)

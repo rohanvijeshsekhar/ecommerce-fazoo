@@ -22,6 +22,7 @@ import WarrantyRegistrationDetailPage from './pages/WarrantyRegistrationDetailPa
 import SupportPage from './pages/SupportPage';
 import SupportDetailPage from './pages/SupportDetailPage';
 import FulfillmentPage from './pages/FulfillmentPage';
+import ReportsPage from './pages/ReportsPage';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -70,11 +71,8 @@ const AdminRoutes: React.FC = () => (
       <Route path="support" element={<SupportPage />} />
       <Route path="support/:id" element={<SupportDetailPage />} />
 
-      {/* Intelligence — Phase 5E */}
-      <Route
-        path="reports"
-        element={<ComingSoon module="Reports" description="Sales analytics, revenue reports, and business intelligence." />}
-      />
+      {/* Intelligence — Phase 5E LIVE */}
+      <Route path="reports" element={<ReportsPage />} />
       <Route
         path="notifications"
         element={<ComingSoon module="Notifications" description="System alerts, broadcast messages, and notification management." />}
