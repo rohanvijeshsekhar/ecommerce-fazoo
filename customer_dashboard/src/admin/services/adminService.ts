@@ -45,6 +45,79 @@ const delay = (ms = 400) => new Promise<void>((r) => setTimeout(r, ms));
 // ── Dashboard Service ─────────────────────────────────────────────────────────
 
 export const dashboardService = {
+  async getOverview(period = '7 Days'): Promise<ServiceResponse<any>> {
+    try {
+      const res = await api.get('admin/dashboard/overview/', { params: { period } });
+      return res.data;
+    } catch (err: any) {
+      console.error('Failed to fetch dashboard overview:', err);
+      return { success: false, message: err.message || 'Failed to fetch dashboard overview' };
+    }
+  },
+
+  async getRevenue(): Promise<ServiceResponse<any>> {
+    try {
+      const res = await api.get('admin/dashboard/revenue/');
+      return res.data;
+    } catch (err: any) {
+      return { success: false, message: err.message };
+    }
+  },
+
+  async getOrders(): Promise<ServiceResponse<any>> {
+    try {
+      const res = await api.get('admin/dashboard/orders/');
+      return res.data;
+    } catch (err: any) {
+      return { success: false, message: err.message };
+    }
+  },
+
+  async getCustomersStats(): Promise<ServiceResponse<any>> {
+    try {
+      const res = await api.get('admin/dashboard/customers/');
+      return res.data;
+    } catch (err: any) {
+      return { success: false, message: err.message };
+    }
+  },
+
+  async getProductsStats(): Promise<ServiceResponse<any>> {
+    try {
+      const res = await api.get('admin/dashboard/products/');
+      return res.data;
+    } catch (err: any) {
+      return { success: false, message: err.message };
+    }
+  },
+
+  async getDealersStats(): Promise<ServiceResponse<any>> {
+    try {
+      const res = await api.get('admin/dashboard/dealers/');
+      return res.data;
+    } catch (err: any) {
+      return { success: false, message: err.message };
+    }
+  },
+
+  async getInventoryStats(): Promise<ServiceResponse<any>> {
+    try {
+      const res = await api.get('admin/dashboard/inventory/');
+      return res.data;
+    } catch (err: any) {
+      return { success: false, message: err.message };
+    }
+  },
+
+  async getPaymentsStats(): Promise<ServiceResponse<any>> {
+    try {
+      const res = await api.get('admin/dashboard/payments/');
+      return res.data;
+    } catch (err: any) {
+      return { success: false, message: err.message };
+    }
+  },
+
   async getStats(): Promise<ServiceResponse<DashboardStat[]>> {
     await delay();
     const stats: DashboardStat[] = [

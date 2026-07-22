@@ -123,15 +123,15 @@ const AdminSidebar: React.FC = () => {
               : 'pl-6 pr-4 py-3 rounded-l-none rounded-r-full mr-2'
             }
             ${active
-              ? 'bg-gradient-to-r from-[#005F63] to-[#0B7C80] text-white shadow-[0_4px_12px_rgba(0,95,99,0.12)] font-semibold'
-              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
+              ? 'bg-gradient-to-r from-[#005F63] via-[#087276] to-[#0B7C80] text-white shadow-[0_4px_16px_rgba(0,95,99,0.22)] font-bold backdrop-blur-md border border-white/20'
+              : 'text-slate-500 hover:bg-slate-100/70 hover:text-slate-900 backdrop-blur-sm font-medium'}`}
         >
           {Icon && (
             <Icon className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${active ? 'text-white' : 'text-slate-400 group-hover/link:text-slate-700'}`} />
           )}
 
           {!collapsed && (
-            <span className={`text-[13px] tracking-tight truncate flex-1 font-medium transition-colors ${active ? 'text-white font-semibold' : 'text-slate-650 group-hover/link:text-slate-900'}`}>
+            <span className={`text-[13px] tracking-tight truncate flex-1 transition-colors ${active ? 'text-white font-bold' : 'text-slate-600 group-hover/link:text-slate-900 font-semibold'}`}>
               {item.label}
             </span>
           )}
@@ -160,9 +160,12 @@ const AdminSidebar: React.FC = () => {
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-white select-none">
+    <div className="flex flex-col h-full bg-white/85 backdrop-blur-2xl border-r border-slate-200/80 shadow-[4px_0_30px_rgba(0,0,0,0.02)] select-none relative overflow-hidden">
+      {/* Top subtle sheen glow */}
+      <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-[#005F63]/[0.04] to-transparent pointer-events-none" />
+
       {/* Logo + Collapse toggle */}
-      <div className={`flex items-center px-6 py-6 border-b border-slate-100/60 shrink-0
+      <div className={`flex items-center px-6 py-6 border-b border-slate-200/60 bg-white/40 backdrop-blur-md shrink-0 relative z-10
         ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
         {!isSidebarCollapsed && (
           <div className="flex items-center">
@@ -187,8 +190,8 @@ const AdminSidebar: React.FC = () => {
         {/* Desktop collapse toggle */}
         <button
           onClick={toggleSidebar}
-          className="hidden lg:flex w-7 h-7 items-center justify-center rounded-lg border border-slate-100
-            text-slate-450 hover:bg-slate-50 hover:text-slate-700 transition-all duration-200 shrink-0 shadow-xs"
+          className="hidden lg:flex w-7 h-7 items-center justify-center rounded-xl bg-white/80 backdrop-blur-md border border-slate-200/80
+            text-slate-450 hover:bg-slate-100 hover:text-slate-700 transition-all duration-200 shrink-0 shadow-2xs"
         >
           {isSidebarCollapsed
             ? <ChevronRight className="w-4 h-4" />
@@ -198,23 +201,23 @@ const AdminSidebar: React.FC = () => {
         {/* Mobile close */}
         <button
           onClick={() => setMobileSidebarOpen(false)}
-          className="lg:hidden w-7 h-7 flex items-center justify-center rounded-lg border border-slate-100
-            text-slate-450 hover:bg-slate-50 transition-all duration-200"
+          className="lg:hidden w-7 h-7 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-md border border-slate-200/80
+            text-slate-450 hover:bg-slate-100 transition-all duration-200"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
       {/* Nav groups */}
-      <nav className="flex-1 overflow-y-auto pl-0 pr-2 py-5 space-y-6 scrollbar-thin">
+      <nav className="flex-1 overflow-y-auto pl-0 pr-2 py-5 space-y-6 scrollbar-thin relative z-10">
         {NAV_GROUPS.map((group) => (
           <div key={group.label} className="space-y-1.5">
             {!isSidebarCollapsed ? (
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.12em] pl-6">
+              <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.14em] pl-6">
                 {group.label}
               </p>
             ) : (
-              <div className="border-t border-slate-100/60 my-3 mx-1" />
+              <div className="border-t border-slate-200/60 my-3 mx-1" />
             )}
             <div className="space-y-0.5">
               {group.items.map((item) => (
@@ -226,15 +229,15 @@ const AdminSidebar: React.FC = () => {
       </nav>
 
       {/* Bottom Profile section */}
-      <div className="p-4 border-t border-slate-100/60 bg-slate-50/40 shrink-0">
+      <div className="p-4 border-t border-slate-200/70 bg-gradient-to-br from-slate-50/90 via-white/70 to-slate-50/90 backdrop-blur-xl shrink-0 relative z-10">
         {!isSidebarCollapsed ? (
-          <div className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-slate-50 transition-all duration-200 border border-transparent hover:border-slate-100">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#005F63]/10 to-[#0B7C80]/5 text-[#005F63] flex items-center justify-center font-bold text-sm shrink-0 border border-[#005F63]/15">
+          <div className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/90 transition-all duration-200 border border-slate-200/50 hover:border-slate-300 shadow-2xs">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#005F63]/15 to-[#0B7C80]/10 text-[#005F63] flex items-center justify-center font-black text-sm shrink-0 border border-[#005F63]/20 shadow-2xs">
               {userInitials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-800 truncate leading-tight">{userName}</p>
-              <p className="text-[10px] text-slate-400 truncate mt-0.5 font-medium">
+              <p className="text-xs font-extrabold text-slate-800 truncate leading-tight">{userName}</p>
+              <p className="text-[10px] text-slate-400 truncate mt-0.5 font-semibold">
                 {ROLE_LABELS[adminRole] || 'Administrator'}
               </p>
             </div>
@@ -251,7 +254,7 @@ const AdminSidebar: React.FC = () => {
             <div className="relative group/avatar">
               <button
                 onClick={handleLogout}
-                className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#005F63]/10 to-[#0B7C80]/5 text-[#005F63] flex items-center justify-center font-bold text-sm border border-[#005F63]/15 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50/50 transition-all duration-250 group"
+                className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#005F63]/15 to-[#0B7C80]/10 text-[#005F63] flex items-center justify-center font-black text-sm border border-[#005F63]/20 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50/50 transition-all duration-250 group"
               >
                 <span className="group-hover:hidden">{userInitials}</span>
                 <LogOut className="w-3.5 h-3.5 hidden group-hover:block" />
@@ -274,7 +277,7 @@ const AdminSidebar: React.FC = () => {
     <>
       {/* Desktop sidebar */}
       <aside
-        className={`hidden lg:flex flex-col flex-shrink-0 bg-white border-r border-slate-100/60
+        className={`hidden lg:flex flex-col flex-shrink-0 bg-white/85 backdrop-blur-2xl border-r border-slate-200/80
           h-screen sticky top-0 z-30 transition-all duration-300 ease-in-out
           ${isSidebarCollapsed ? 'w-[78px]' : 'w-[260px]'}`}
       >
@@ -292,7 +295,7 @@ const AdminSidebar: React.FC = () => {
         />
         {/* Panel */}
         <aside
-          className={`absolute left-0 top-0 bottom-0 w-[270px] bg-white shadow-2xl
+          className={`absolute left-0 top-0 bottom-0 w-[270px] bg-white/95 backdrop-blur-2xl shadow-2xl
             transition-transform duration-300 ease-out z-50
             ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
